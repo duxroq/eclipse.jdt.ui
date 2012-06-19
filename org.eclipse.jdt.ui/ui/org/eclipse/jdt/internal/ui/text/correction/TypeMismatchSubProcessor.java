@@ -194,10 +194,10 @@ public class TypeMismatchSubProcessor {
 			if (currBinding.isWildcardType()) {
 				currBinding= ASTResolving.normalizeWildcardType(currBinding, true, ast);
 			}
-			addChangeSenderTypeProposals(context, receiverNode, currBinding, true, 6, proposals);
+			addChangeSenderTypeProposals(context, receiverNode, currBinding, true, IProposalRelevance.CHANGE_TYPE_1, proposals);
 		}
 
-		addChangeSenderTypeProposals(context, nodeToCast, castTypeBinding, false, 5, proposals);
+		addChangeSenderTypeProposals(context, nodeToCast, castTypeBinding, false, IProposalRelevance.CHANGE_TYPE_2, proposals);
 
 		if (castTypeBinding == ast.resolveWellKnownType("boolean") && currBinding != null && !currBinding.isPrimitive() && !Bindings.isVoidType(currBinding)) { //$NON-NLS-1$
 			String label= CorrectionMessages.TypeMismatchSubProcessor_insertnullcheck_description;
@@ -386,7 +386,7 @@ public class TypeMismatchSubProcessor {
 			}
 			String label= Messages.format(CorrectionMessages.TypeMismatchSubProcessor_removeexceptions_description, BasicElementLabels.getJavaElementName(methodDeclBinding.getName()));
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_REMOVE);
-			proposals.add(new ChangeMethodSignatureProposal(label, cu, astRoot, methodDeclBinding, null, changes, 8, image));
+			proposals.add(new ChangeMethodSignatureProposal(label, cu, astRoot, methodDeclBinding, null, changes, IProposalRelevance.REMOVE_EXCEPTIONS, image));
 		}
 
 		ITypeBinding declaringType= overridden.getDeclaringClass();
@@ -404,7 +404,7 @@ public class TypeMismatchSubProcessor {
 			String[] args= {  BasicElementLabels.getJavaElementName(declaringType.getName()), BasicElementLabels.getJavaElementName(overridden.getName()) };
 			String label= Messages.format(CorrectionMessages.TypeMismatchSubProcessor_addexceptions_description, args);
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_ADD);
-			proposals.add(new ChangeMethodSignatureProposal(label, targetCu, astRoot, overriddenDecl, null, changes, 7, image));
+			proposals.add(new ChangeMethodSignatureProposal(label, targetCu, astRoot, overriddenDecl, null, changes, IProposalRelevance.ADD_EXCEPTIONS, image));
 		}
 	}
 

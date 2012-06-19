@@ -840,7 +840,7 @@ public class AdvancedQuickAssistProcessor implements IQuickAssistProcessor {
 				// add correction proposal
 				String label= CorrectionMessages.AdvancedQuickAssistProcessor_joinWithInner_description;
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, 1, image);
+				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, IProposalRelevance.JOIN_IF_WITH_INNER_IF, image);
 				resultingCollections.add(proposal);
 			}
 		}

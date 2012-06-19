@@ -61,6 +61,8 @@ import org.eclipse.jdt.internal.ui.viewsupport.BindingLabelProvider;
 
 public class ReturnTypeSubProcessor {
 
+	private static final int METHOD_RETURNS_VOID= 4;
+
 	private static class ReturnStatementCollector extends ASTVisitor {
 		private ArrayList<ReturnStatement> fResult= new ArrayList<ReturnStatement>();
 
@@ -337,7 +339,7 @@ public class ReturnTypeSubProcessor {
 			if (retType == null || retType.resolveBinding() == null) {
 				return;
 			}
-			TypeMismatchSubProcessor.addChangeSenderTypeProposals(context, expression, retType.resolveBinding(), false, 4, proposals);
+			TypeMismatchSubProcessor.addChangeSenderTypeProposals(context, expression, retType.resolveBinding(), false, METHOD_RETURNS_VOID, proposals);
 		}
 	}
 }

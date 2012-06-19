@@ -243,7 +243,7 @@ public class ModifierCorrectionSubProcessor {
 				int includedModifiers= JdtFlags.getVisibilityCode(defining);
 				String label= Messages.format(CorrectionMessages.ModifierCorrectionSubProcessor_changemethodvisibility_description, new String[] { getVisibilityString(includedModifiers) });
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-				proposals.add(new ModifierChangeCorrectionProposal(label, cu, method, selectedNode, includedModifiers, excludedModifiers, 8, image));
+				proposals.add(new ModifierChangeCorrectionProposal(label, cu, method, selectedNode, includedModifiers, excludedModifiers, IProposalRelevance.CHANGE_OVERRIDDEN_MODIFIER_1, image));
 			}
 		}
 
@@ -281,7 +281,7 @@ public class ModifierCorrectionSubProcessor {
 						return;
 				}
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-				proposals.add(new ModifierChangeCorrectionProposal(label, targetCU, overriddenDecl, selectedNode, includedModifiers, excludedModifiers, 7, image));
+				proposals.add(new ModifierChangeCorrectionProposal(label, targetCU, overriddenDecl, selectedNode, includedModifiers, excludedModifiers, IProposalRelevance.CHANGE_OVERRIDDEN_MODIFIER_2, image));
 			}
 		}
 	}
@@ -299,7 +299,7 @@ public class ModifierCorrectionSubProcessor {
 			binding= ((IVariableBinding) binding).getVariableDeclaration();
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
 			String label= Messages.format(CorrectionMessages.ModifierCorrectionSubProcessor_changemodifiertofinal_description, BasicElementLabels.getJavaElementName(binding.getName()));
-			proposals.add(new ModifierChangeCorrectionProposal(label, cu, binding, selectedNode, Modifier.FINAL, 0, 5, image));
+			proposals.add(new ModifierChangeCorrectionProposal(label, cu, binding, selectedNode, Modifier.FINAL, 0, IProposalRelevance.CHANGE_MODIFIER_TO_FINAL, image));
 		}
 	}
 
@@ -696,7 +696,7 @@ public class ModifierCorrectionSubProcessor {
 			binding= ((IVariableBinding) binding).getVariableDeclaration();
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
 			String label= Messages.format(CorrectionMessages.ModifierCorrectionSubProcessor_changemodifiertofinal_description, BasicElementLabels.getJavaElementName(binding.getName()));
-			proposals.add(new ModifierChangeCorrectionProposal(label, cu, binding, selectedNode, Modifier.FINAL, 0, 5, image));
+			proposals.add(new ModifierChangeCorrectionProposal(label, cu, binding, selectedNode, Modifier.FINAL, 0, IProposalRelevance.CHANGE_MODIFIER_OF_VARIABLE_TO_FINAL, image));
 		}
 	}
 
@@ -801,7 +801,7 @@ public class ModifierCorrectionSubProcessor {
 		if (binding instanceof IMethodBinding) {
 			binding= ((IMethodBinding) binding).getMethodDeclaration();
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			proposals.add(new ModifierChangeCorrectionProposal(label, cu, binding, selectedNode, modifier, 0, 5, image));
+			proposals.add(new ModifierChangeCorrectionProposal(label, cu, binding, selectedNode, modifier, 0, IProposalRelevance.ADD_METHOD_MODIFIER, image));
 		}
 	}
 

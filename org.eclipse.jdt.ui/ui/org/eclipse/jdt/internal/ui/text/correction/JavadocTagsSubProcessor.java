@@ -445,7 +445,7 @@ public class JavadocTagsSubProcessor {
 			String string= CodeGeneration.getMethodComment(cu, binding.getName(), methodDecl, overridden, String.valueOf('\n'));
 			if (string != null) {
 				String label= CorrectionMessages.JavadocTagsSubProcessor_addjavadoc_method_description;
-				proposals.add(new AddJavadocCommentProposal(label, cu, 1, declaration.getStartPosition(), string));
+				proposals.add(new AddJavadocCommentProposal(label, cu, IProposalRelevance.ADD_JAVADOC_METHOD, declaration.getStartPosition(), string));
 			}
 		} else if (declaration instanceof AbstractTypeDeclaration) {
 			String typeQualifiedName= Bindings.getTypeQualifiedName(binding);
@@ -462,7 +462,7 @@ public class JavadocTagsSubProcessor {
 			String string= CodeGeneration.getTypeComment(cu, typeQualifiedName, typeParamNames, String.valueOf('\n'));
 			if (string != null) {
 				String label= CorrectionMessages.JavadocTagsSubProcessor_addjavadoc_type_description;
-				proposals.add(new AddJavadocCommentProposal(label, cu, 1, declaration.getStartPosition(), string));
+				proposals.add(new AddJavadocCommentProposal(label, cu, IProposalRelevance.ADD_JAVADOC_TYPE, declaration.getStartPosition(), string));
 			}
 		} else if (declaration instanceof FieldDeclaration) {
 			String comment= "/**\n *\n */\n"; //$NON-NLS-1$
@@ -475,14 +475,14 @@ public class JavadocTagsSubProcessor {
 			}
 			if (comment != null) {
 				String label= CorrectionMessages.JavadocTagsSubProcessor_addjavadoc_field_description;
-				proposals.add(new AddJavadocCommentProposal(label, cu, 1, declaration.getStartPosition(), comment));
+				proposals.add(new AddJavadocCommentProposal(label, cu, IProposalRelevance.ADD_JAVADOC_FIELD, declaration.getStartPosition(), comment));
 			}
 		} else if (declaration instanceof EnumConstantDeclaration) {
 			EnumConstantDeclaration enumDecl= (EnumConstantDeclaration) declaration;
 			String id= enumDecl.getName().getIdentifier();
 			String comment= CodeGeneration.getFieldComment(cu, binding.getName(), id, String.valueOf('\n'));
 			String label= CorrectionMessages.JavadocTagsSubProcessor_addjavadoc_enumconst_description;
-			proposals.add(new AddJavadocCommentProposal(label, cu, 1, declaration.getStartPosition(), comment));
+			proposals.add(new AddJavadocCommentProposal(label, cu, IProposalRelevance.ADD_JAVADOC_ENUM, declaration.getStartPosition(), comment));
 		}
 	}
 

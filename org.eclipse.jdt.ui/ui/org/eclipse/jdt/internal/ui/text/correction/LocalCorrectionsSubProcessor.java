@@ -422,7 +422,7 @@ public class LocalCorrectionsSubProcessor {
 				String label= CorrectionMessages.LocalCorrectionsSubProcessor_addthrows_description;
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_OBJS_EXCEPTION);
 
-				ChangeMethodSignatureProposal proposal= new ChangeMethodSignatureProposal(label, cu, astRoot, binding, null, desc, 8, image);
+				ChangeMethodSignatureProposal proposal= new ChangeMethodSignatureProposal(label, cu, astRoot, binding, null, desc, IProposalRelevance.ADD_THROWS_DECLARATION, image);
 				for (int i= 0; i < uncaughtExceptions.length; i++) {
 					addExceptionTypeLinkProposals(proposal, uncaughtExceptions[i], proposal.getExceptionTypeGroupId(i + nExistingExceptions));
 				}
@@ -543,7 +543,7 @@ public class LocalCorrectionsSubProcessor {
 				proposals.add(proposal);
 			}
 		}
-		ModifierCorrectionSubProcessor.addNonAccessibleReferenceProposal(context, problem, proposals, ModifierCorrectionSubProcessor.TO_NON_STATIC, 4);
+		ModifierCorrectionSubProcessor.addNonAccessibleReferenceProposal(context, problem, proposals, ModifierCorrectionSubProcessor.TO_NON_STATIC, IProposalRelevance.REMOVE_STATIC_MODIFIER);
 	}
 
 	public static void addUnimplementedMethodsProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
@@ -656,7 +656,7 @@ public class LocalCorrectionsSubProcessor {
 		}
 
 		if (problemId == IProblem.UnusedPrivateField) {
-			GetterSetterCorrectionSubProcessor.addGetterSetterProposal(context, problem, proposals, 8);
+			GetterSetterCorrectionSubProcessor.addGetterSetterProposal(context, problem, proposals, IProposalRelevance.GETTER_SETTER_UNUSED_PRIVATE_FIELD);
 		}
 
 	}
@@ -754,7 +754,7 @@ public class LocalCorrectionsSubProcessor {
 			String label= CorrectionMessages.LocalCorrectionsSubProcessor_unnecessarythrow_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_OBJS_EXCEPTION);
 
-			proposals.add(new ChangeMethodSignatureProposal(label, cu, selectedNode, binding, null, desc, 5, image));
+			proposals.add(new ChangeMethodSignatureProposal(label, cu, selectedNode, binding, null, desc, IProposalRelevance.UNNECESSARY_THROW, image));
 		}
 
 		JavadocTagsSubProcessor.getUnusedAndUndocumentedParameterOrExceptionProposals(context, problem, proposals);
@@ -1298,7 +1298,7 @@ public class LocalCorrectionsSubProcessor {
 			SimpleName simpleName= (SimpleName) ((assignedNode instanceof SimpleName) ? assignedNode : assignExpression);
 			String label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_createparameter_description, BasicElementLabels.getJavaElementName(simpleName.getIdentifier()));
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_LOCAL);
-			proposals.add(new NewVariableCorrectionProposal(label, context.getCompilationUnit(), NewVariableCorrectionProposal.PARAM, simpleName, null, 5, image));
+			proposals.add(new NewVariableCorrectionProposal(label, context.getCompilationUnit(), NewVariableCorrectionProposal.PARAM, simpleName, null, IProposalRelevance.CREATE_PARAMETER, image));
 		}
 
 

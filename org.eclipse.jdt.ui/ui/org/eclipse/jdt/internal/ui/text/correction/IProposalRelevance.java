@@ -29,8 +29,13 @@ public interface IProposalRelevance {
 	public static final int UNNECESSARY_INSTANCEOF= 10;
 	public static final int REPLACE_FIELD_ACCESS_WITH_METHOD= 10;
 	public static final int REMOVE_UNREACHABLE_CODE_INCLUDING_CONDITION= 10;
+	public static final int CHANGE_VISIBILITY= 10;
 
+	public static final int REMOVE_FINAL_MODIFIER= 9;
+	public static final int GETTER_SETTER_NOT_VISIBLE_FIELD= 9;
 	public static final int ADD_MISSING_BODY= 9;
+	public static final int MISSING_SERIAL_VERSION= 9;
+	public static final int MISSING_SERIAL_VERSION_DEFAULT= 9;
 
 	public static final int ADD_ABSTRACT_MODIFIER= 8;
 	public static final int ADD_PARENTHESES_AROUND_CAST= 8;
@@ -39,12 +44,22 @@ public interface IProposalRelevance {
 	public static final int THROW_ALLOCATED_OBJECT= 8;
 	public static final int CHANGE_TO_METHOD= 8;
 	public static final int ADD_FIELD_QUALIFIER= 8;
-
+	public static final int ADD_THROWS_DECLARATION= 8;
+	public static final int CHANGE_OVERRIDDEN_MODIFIER_1= 8;
+	public static final int REMOVE_EXCEPTIONS= 8;
+	public static final int SWAP_ARGUMENTS= 8;
+	public static final int GETTER_SETTER_UNUSED_PRIVATE_FIELD= 8;
+	
+	public static final int CHANGE_OVERRIDDEN_MODIFIER_2= 7;
+	public static final int ADD_EXCEPTIONS= 7;
+	public static final int CHANGE_METHOD_SIGNATURE= 7;
 	public static final int SURROUND_WITH_TRY_MULTICATCH= 7;
 	public static final int CAST_AND_ASSIGN= 7;
 	public static final int ADD_ADDITIONAL_MULTI_CATCH= 7;
 	public static final int ADD_EXCEPTIONS_TO_EXISTING_CATCH= 7;
 	public static final int ADD_ADDITIONAL_CATCH= 7;
+	public static final int ADD_NEW_KEYWORD_1= 7;
+	public static final int GETTER_SETTER_QUICK_ASSIST= 7;
 
 	public static final int VOID_METHOD_RETURNS= 6;
 	public static final int RENAME_CU= 6;
@@ -68,6 +83,8 @@ public interface IProposalRelevance {
 	public static final int REMOVE_TYPE_ARGUMENTS= 6;
 	public static final int CHANGE_IF_ELSE_TO_BLOCK= 6;
 	public static final int REMOVE_NATIVE= 6;
+	public static final int REMOVE_UNUSED_IMPORT= 6;
+	public static final int CHANGE_TYPE_1= 6;
 
 	public static final int ADD_ALL_MISSING_TAGS= 5;
 	public static final int QUALIFY_INNER_TYPE_NAME= 5;
@@ -97,6 +114,25 @@ public interface IProposalRelevance {
 	public static final int INFER_GENERIC_TYPE_ARGUMENTS= 5;
 	public static final int ORGANIZE_IMPORTS= 5;
 	public static final int INLINE_LOCAL= 5;
+	public static final int CREATE_PARAMETER= 5;
+	public static final int UNNECESSARY_THROW= 5;
+	public static final int ADD_METHOD_MODIFIER= 5;
+	public static final int CHANGE_MODIFIER_TO_FINAL= 5;
+	public static final int CHANGE_MODIFIER_OF_VARIABLE_TO_FINAL= 5;
+	public static final int CONFIGURE_ACCESS_RULES= 5;
+	public static final int CONFIGURE_BUILD_PATH= 5;
+	public static final int CHANGE_METHOD_ADD_PARAMETER= 5;
+	public static final int CHANGE_METHOD_REMOVE_PARAMETER= 5;
+	public static final int CREATE_METHOD= 5;
+	public static final int CHANGE_METHOD_SWAP_PARAMETERS= 5;
+	public static final int CREATE_ATTRIBUTE= 5;
+	public static final int CREATE_CONSTRUCTOR= 5;
+	public static final int CAST_ARGUMENT= 5;
+	public static final int CHANGE_TYPE_2= 5;
+	public static final int IMPORT_NOT_FOUND_NEW_TYPE= 5;
+	public static final int REMOVE_INVALID_MODIFIERS= 5;
+	public static final int CHANGE_VISIBILITY_TO_NON_PRIVATE= 5;
+	public static final int CHANGE_MODIFIER_TO_STATIC= 5;
 
 	public static final int ADD_MISSING_TAG= 4;
 	public static final int INSERT_FALL_THROUGH= 4;
@@ -104,9 +140,12 @@ public interface IProposalRelevance {
 	public static final int INSERT_CASES_OMITTED= 4;
 	public static final int REMOVE_ASSIGNMENT= 4;
 	public static final int EXTERNALIZE_STRINGS= 4;
+	public static final int ADD_NEW_KEYWORD_2= 4;
+	public static final int REMOVE_STATIC_MODIFIER= 4;
 
 	public static final int CHANGE_CLASS_TO_INTERFACE= 3;
 	public static final int GENERATE_HASHCODE_AND_EQUALS= 3;
+	public static final int SIMILAR_TYPE= 3;
 
 	public static final int CONVERT_TO_INDEXED_FOR_LOOP= 2;
 	public static final int USE_SEPARATE_CATCH_BLOCKS= 2;
@@ -148,13 +187,22 @@ public interface IProposalRelevance {
 	public static final int ADD_FINALLY_BLOCK= 1;
 	public static final int ADD_ELSE_BLOCK= 1;
 	public static final int CONVERT_TO_STRING_BUFFER= 1;
+	public static final int JOIN_IF_WITH_INNER_IF= 1;
+	public static final int ADD_JAVADOC_ENUM= 1;
+	public static final int ADD_JAVADOC_FIELD= 1;
+	public static final int ADD_JAVADOC_TYPE= 1;
+	public static final int ADD_JAVADOC_METHOD= 1;
 
 	public static final int CONVERT_TO_MESSAGE_FORMAT= 0;
 	public static final int COPY_ANNOTATION_JAR= 0;
 	public static final int ADD_ANNOTATION_BUNDLE= 0;
 	public static final int REMOVE_BLOCK_FIX= 0;
+	public static final int NO_SUGGESSTIONS_AVAILABLE= 0;
+	public static final int ADD_QUOTE= 0;
+	public static final int NEW_TYPE= 0;
 
 	public static final int ADD_PARANOIDAL_PARENTHESES= -9;
 
 	public static final int ADD_PARENTHESES_FOR_EXPRESSION= -10;
+	
 }

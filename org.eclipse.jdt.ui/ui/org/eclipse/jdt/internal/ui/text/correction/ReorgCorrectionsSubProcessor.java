@@ -119,8 +119,6 @@ import org.eclipse.jdt.internal.ui.wizards.buildpaths.ClasspathFixSelectionDialo
 
 public class ReorgCorrectionsSubProcessor {
 
-	private static final int REMOVE_UNUSED_IMPORT= 6;
-
 	public static void getWrongTypeNameProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		ICompilationUnit cu= context.getCompilationUnit();
 		boolean isLinked= cu.getResource().isLinked();
@@ -214,7 +212,7 @@ public class ReorgCorrectionsSubProcessor {
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_DELETE_IMPORT);
 			Map<String, String> options= new Hashtable<String, String>();
 			options.put(CleanUpConstants.REMOVE_UNUSED_CODE_IMPORTS, CleanUpOptions.TRUE);
-			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new UnusedCodeCleanUp(options), REMOVE_UNUSED_IMPORT, image, context);
+			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new UnusedCodeCleanUp(options), IProposalRelevance.REMOVE_UNUSED_IMPORT, image, context);
 			proposals.add(proposal);
 		}
 
@@ -313,7 +311,7 @@ public class ReorgCorrectionsSubProcessor {
 				name= ((QualifiedName) name).getQualifier();
 			}
 			int kind= JavaModelUtil.is50OrHigher(cu.getJavaProject()) ? SimilarElementsRequestor.REF_TYPES : SimilarElementsRequestor.CLASSES | SimilarElementsRequestor.INTERFACES;
-			UnresolvedElementsSubProcessor.addNewTypeProposals(cu, name, kind, 5, proposals);
+			UnresolvedElementsSubProcessor.addNewTypeProposals(cu, name, kind, IProposalRelevance.IMPORT_NOT_FOUND_NEW_TYPE, proposals);
 		}
 
 		String name= ASTNodes.asString(importDeclaration.getName());
@@ -650,7 +648,7 @@ public class ReorgCorrectionsSubProcessor {
 	public static void getIncorrectBuildPathProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		IProject project= context.getCompilationUnit().getJavaProject().getProject();
 		String label= CorrectionMessages.ReorgCorrectionsSubProcessor_configure_buildpath_label;
-		OpenBuildPathCorrectionProposal proposal= new OpenBuildPathCorrectionProposal(project, label, 5, null);
+		OpenBuildPathCorrectionProposal proposal= new OpenBuildPathCorrectionProposal(project, label, IProposalRelevance.CONFIGURE_BUILD_PATH, null);
 		proposals.add(proposal);
 	}
 
@@ -665,7 +663,7 @@ public class ReorgCorrectionsSubProcessor {
 		if (referencedElement != null && canModifyAccessRules(referencedElement)) {
 			IProject project= context.getCompilationUnit().getJavaProject().getProject();
 			String label= CorrectionMessages.ReorgCorrectionsSubProcessor_accessrules_description;
-			OpenBuildPathCorrectionProposal proposal= new OpenBuildPathCorrectionProposal(project, label, 5, referencedElement);
+			OpenBuildPathCorrectionProposal proposal= new OpenBuildPathCorrectionProposal(project, label, IProposalRelevance.CONFIGURE_ACCESS_RULES, referencedElement);
 			proposals.add(proposal);
 		}
 	}

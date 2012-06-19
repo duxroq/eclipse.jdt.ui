@@ -512,7 +512,7 @@ public class ModifierCorrectionSubProcessor {
 
 			String label= CorrectionMessages.ModifierCorrectionSubProcessor_removeabstract_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 6, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.REMOVE_ABSTRACT_MODIFIER, image);
 			proposals.add(proposal);
 		}
 
@@ -522,7 +522,7 @@ public class ModifierCorrectionSubProcessor {
 
 			String label= CorrectionMessages.ModifierCorrectionSubProcessor_removebody_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal2= new ASTRewriteCorrectionProposal(label, cu, rewrite, 5, image);
+			ASTRewriteCorrectionProposal proposal2= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.REMOVE_METHOD_BODY, image);
 			proposals.add(proposal2);
 		}
 
@@ -539,7 +539,7 @@ public class ModifierCorrectionSubProcessor {
 		UnimplementedCodeFix fix= new UnimplementedCodeFix(label, context.getASTRoot(), new CompilationUnitRewriteOperation[] { operation });
 	
 		Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-		FixCorrectionProposal proposal= new FixCorrectionProposal(fix, null, 5, image, context);
+		FixCorrectionProposal proposal= new FixCorrectionProposal(fix, null, IProposalRelevance.MAKE_TYPE_ABSTRACT_FIX, image, context);
 		proposals.add(proposal);
 	}
 
@@ -610,7 +610,7 @@ public class ModifierCorrectionSubProcessor {
 
 			String label= CorrectionMessages.ModifierCorrectionSubProcessor_removenative_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 6, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.REMOVE_NATIVE, image);
 			proposals.add(proposal);
 		}
 
@@ -620,7 +620,7 @@ public class ModifierCorrectionSubProcessor {
 
 			String label= CorrectionMessages.ModifierCorrectionSubProcessor_removebody_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal2= new ASTRewriteCorrectionProposal(label, cu, rewrite, 5, image);
+			ASTRewriteCorrectionProposal proposal2= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.REMOVE_METHOD_BODY, image);
 			proposals.add(proposal2);
 		}
 
@@ -661,7 +661,7 @@ public class ModifierCorrectionSubProcessor {
 
 			String label= CorrectionMessages.ModifierCorrectionSubProcessor_addmissingbody_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 9, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.ADD_MISSING_BODY, image);
 
 			proposals.add(proposal);
 		}
@@ -674,7 +674,7 @@ public class ModifierCorrectionSubProcessor {
 
 			String label= CorrectionMessages.ModifierCorrectionSubProcessor_setmethodabstract_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, 8, image);
+			LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, IProposalRelevance.ADD_ABSTRACT_MODIFIER, image);
 			proposal.addLinkedPosition(rewrite.track(newModifier), true, "modifier"); //$NON-NLS-1$
 
 			proposals.add(proposal);
@@ -708,7 +708,7 @@ public class ModifierCorrectionSubProcessor {
 			options.put(CleanUpConstants.ADD_MISSING_ANNOTATIONS, CleanUpOptions.TRUE);
 			options.put(CleanUpConstants.ADD_MISSING_ANNOTATIONS_OVERRIDE, CleanUpOptions.TRUE);
 			options.put(CleanUpConstants.ADD_MISSING_ANNOTATIONS_OVERRIDE_FOR_INTERFACE_METHOD_IMPLEMENTATION, CleanUpOptions.TRUE);
-			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new Java50CleanUp(options), 15, image, context);
+			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new Java50CleanUp(options), IProposalRelevance.ADD_OVERRIDE_ANNOTATION, image, context);
 			proposals.add(proposal);
 		}
 	}
@@ -720,7 +720,7 @@ public class ModifierCorrectionSubProcessor {
 			Map<String, String> options= new Hashtable<String, String>();
 			options.put(CleanUpConstants.ADD_MISSING_ANNOTATIONS, CleanUpOptions.TRUE);
 			options.put(CleanUpConstants.ADD_MISSING_ANNOTATIONS_DEPRECATED, CleanUpOptions.TRUE);
-			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new Java50CleanUp(options), 15, image, context);
+			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new Java50CleanUp(options), IProposalRelevance.ADD_DEPRECATED_ANNOTATION, image, context);
 			proposals.add(proposal);
 		}
 	}
@@ -755,7 +755,7 @@ public class ModifierCorrectionSubProcessor {
 
 		String label= CorrectionMessages.ModifierCorrectionSubProcessor_overrides_deprecated_description;
 		Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 15, image);
+		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.OVERRIDES_DEPRECATED, image);
 		proposals.add(proposal);
 	}
 
@@ -773,7 +773,7 @@ public class ModifierCorrectionSubProcessor {
 			rewrite.remove(annot, null);
 			String label= CorrectionMessages.ModifierCorrectionSubProcessor_remove_override;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 6, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.REMOVE_OVERRIDE, image);
 			proposals.add(proposal);
 
 			QuickAssistProcessor.getCreateInSuperClassProposals(context, methodDecl.getName(), proposals);

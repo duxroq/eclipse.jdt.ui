@@ -168,7 +168,7 @@ public class VarargsWarningsSubProcessor {
 
 		String label= CorrectionMessages.VarargsWarningsSubProcessor_remove_safevarargs_label;
 		Image image= JavaPlugin.getDefault().getWorkbench().getSharedImages().getImage(ISharedImages.IMG_TOOL_DELETE);
-		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, 5, image);
+		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, IProposalRelevance.REMOVE_SAFEVARARGS, image);
 		proposals.add(proposal);
 	}
 

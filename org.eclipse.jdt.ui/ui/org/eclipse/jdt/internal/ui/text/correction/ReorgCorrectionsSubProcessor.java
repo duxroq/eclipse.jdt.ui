@@ -119,6 +119,8 @@ import org.eclipse.jdt.internal.ui.wizards.buildpaths.ClasspathFixSelectionDialo
 
 public class ReorgCorrectionsSubProcessor {
 
+	private static final int REMOVE_UNUSED_IMPORT= 6;
+
 	public static void getWrongTypeNameProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		ICompilationUnit cu= context.getCompilationUnit();
 		boolean isLinked= cu.getResource().isLinked();
@@ -169,7 +171,7 @@ public class ReorgCorrectionsSubProcessor {
 
 				// rename CU
 				String label= Messages.format(CorrectionMessages.ReorgCorrectionsSubProcessor_renamecu_description, BasicElementLabels.getResourceName(newCUName));
-				proposals.add(new ChangeCorrectionProposal(label, change, 6, JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_RENAME)));
+				proposals.add(new ChangeCorrectionProposal(label, change, IProposalRelevance.RENAME_CU, JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_RENAME)));
 			}
 		}
 	}
@@ -202,7 +204,7 @@ public class ReorgCorrectionsSubProcessor {
 			composite.add(new CreatePackageChange(newPack));
 			composite.add(new MoveCompilationUnitChange(cu, newPack));
 
-			proposals.add(new ChangeCorrectionProposal(label, composite, 6, JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_MOVE)));
+			proposals.add(new ChangeCorrectionProposal(label, composite, IProposalRelevance.MOVE_CU_TO_PACKAGE, JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_MOVE)));
 		}
 	}
 
@@ -212,13 +214,13 @@ public class ReorgCorrectionsSubProcessor {
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_DELETE_IMPORT);
 			Map<String, String> options= new Hashtable<String, String>();
 			options.put(CleanUpConstants.REMOVE_UNUSED_CODE_IMPORTS, CleanUpOptions.TRUE);
-			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new UnusedCodeCleanUp(options), 6, image, context);
+			FixCorrectionProposal proposal= new FixCorrectionProposal(fix, new UnusedCodeCleanUp(options), REMOVE_UNUSED_IMPORT, image, context);
 			proposals.add(proposal);
 		}
 
 		final ICompilationUnit cu= context.getCompilationUnit();
 		String name= CorrectionMessages.ReorgCorrectionsSubProcessor_organizeimports_description;
-		ChangeCorrectionProposal proposal= new ChangeCorrectionProposal(name, null, 5, JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE)) {
+		ChangeCorrectionProposal proposal= new ChangeCorrectionProposal(name, null, IProposalRelevance.ORGANIZE_IMPORTS, JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE)) {
 			@Override
 			public void apply(IDocument document) {
 				IEditorInput input= new FileEditorInput((IFile) cu.getResource());

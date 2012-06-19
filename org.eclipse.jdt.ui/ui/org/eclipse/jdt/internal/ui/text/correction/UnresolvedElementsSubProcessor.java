@@ -341,7 +341,7 @@ public class UnresolvedElementsSubProcessor {
 				}
 				String label= CorrectionMessages.UnresolvedElementsSubProcessor_removestatement_description;
 				Image image= JavaPlugin.getDefault().getWorkbench().getSharedImages().getImage(ISharedImages.IMG_TOOL_DELETE);
-				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 4, image);
+				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.REMOVE_ASSIGNMENT, image);
 				proposals.add(proposal);
 			}
 		}
@@ -517,7 +517,7 @@ public class UnresolvedElementsSubProcessor {
 							ASTRewrite rewrite= ASTRewrite.create(ast);
 							String label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_changetomethod_description, ASTResolving.getMethodSignature(curr));
 							Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-							LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, 8, image);
+							LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, IProposalRelevance.CHANGE_TO_METHOD, image);
 							newProposals.add(proposal);
 
 							MethodInvocation newInv= ast.newMethodInvocation();
@@ -674,7 +674,7 @@ public class UnresolvedElementsSubProcessor {
 		final String changeName= CorrectionMessages.UnresolvedElementsSubProcessor_add_annotation_bundle_description;
 		final String buildPropertiesEntry= "additional.bundles = org.eclipse.jdt.annotation"; //$NON-NLS-1$
 		
-		ChangeCorrectionProposal proposal= new ChangeCorrectionProposal(changeName, null, 0) {
+		ChangeCorrectionProposal proposal= new ChangeCorrectionProposal(changeName, null, IProposalRelevance.ADD_ANNOTATION_BUNDLE) {
 			@Override
 			protected Change createChange() throws CoreException {
 				if (!buildProperties.exists()) {
@@ -739,7 +739,7 @@ public class UnresolvedElementsSubProcessor {
 			return; // we only support a JAR'd bundle, so this won't work in the runtime if you have org.eclipse.jdt.annotation in source.
 
 		final String changeName= CorrectionMessages.UnresolvedElementsSubProcessor_copy_annotation_jar_description;
-		ChangeCorrectionProposal proposal= new ChangeCorrectionProposal(changeName, null, 0) {
+		ChangeCorrectionProposal proposal= new ChangeCorrectionProposal(changeName, null, IProposalRelevance.COPY_ANNOTATION_JAR) {
 			@Override
 			protected Change createChange() throws CoreException {
 				final IFile file= javaProject.getProject().getFile(bundleFile.getName());
@@ -1135,7 +1135,7 @@ public class UnresolvedElementsSubProcessor {
 				}
 
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_OBJS_IMPDECL);
-				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), astRewrite, 5, image);
+				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), astRewrite, IProposalRelevance.ADD_STATIC_IMPORT, image);
 				proposal.setImportRewrite(importRewrite);
 				proposals.add(proposal);
 			}
@@ -1283,7 +1283,7 @@ public class UnresolvedElementsSubProcessor {
 
 			String label= CorrectionMessages.UnresolvedElementsSubProcessor_missingcastbrackets_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CAST);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 8, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.ADD_PARENTHESES_AROUND_CAST, image);
 			proposals.add(proposal);
 			return true;
 		}
@@ -1447,7 +1447,7 @@ public class UnresolvedElementsSubProcessor {
 				label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_removearguments_description, arg);
 			}
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_REMOVE);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 8, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.REMOVE_ARGUMENTS, image);
 			proposals.add(proposal);
 		}
 
@@ -1735,7 +1735,7 @@ public class UnresolvedElementsSubProcessor {
 
 		String label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_changetoouter_description, ASTResolving.getTypeSignature(currType));
 		Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, 8, image);
+		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, IProposalRelevance.QUALIFY_WITH_ENCLOSING_TYPE, image);
 
 		ImportRewrite imports= proposal.createImportRewrite(context.getASTRoot());
 		ImportRewriteContext importRewriteContext= new ContextSensitiveImportRewriteContext(invocationNode, imports);
@@ -1837,7 +1837,7 @@ public class UnresolvedElementsSubProcessor {
 
 				String label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_importexplicit_description, BasicElementLabels.getJavaElementName(qualifiedTypeName));
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_OBJS_IMPDECL);
-				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, ASTRewrite.create(root.getAST()), 5, image);
+				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, ASTRewrite.create(root.getAST()), IProposalRelevance.IMPORT_EXPLICIT, image);
 
 				ImportRewrite imports= proposal.createImportRewrite(root);
 				imports.addImport(qualifiedTypeName);

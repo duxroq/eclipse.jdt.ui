@@ -127,7 +127,7 @@ public class ReturnTypeSubProcessor {
 
 			String label= CorrectionMessages.ReturnTypeSubProcessor_constrnamemethod_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 5, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.CHANGE_TO_CONSTRUCTOR, image);
 			proposals.add(proposal);
 		}
 
@@ -163,7 +163,7 @@ public class ReturnTypeSubProcessor {
 
 				String label= Messages.format(CorrectionMessages.ReturnTypeSubProcessor_voidmethodreturns_description, BindingLabelProvider.getBindingLabel(binding, BindingLabelProvider.DEFAULT_TEXTFLAGS));
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-				LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, 6, image);
+				LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, IProposalRelevance.VOID_METHOD_RETURNS, image);
 				ImportRewrite imports= proposal.createImportRewrite(astRoot);
 				ImportRewriteContext importRewriteContext= new ContextSensitiveImportRewriteContext(methodDeclaration, imports);
 				Type newReturnType= imports.addImport(binding, ast, importRewriteContext);
@@ -199,7 +199,7 @@ public class ReturnTypeSubProcessor {
 
 			String label= CorrectionMessages.ReturnTypeSubProcessor_removereturn_description;
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 5, image);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.CHANGE_TO_RETURN, image);
 			proposals.add(proposal);
 		}
 	}
@@ -236,7 +236,7 @@ public class ReturnTypeSubProcessor {
 
 			String label= Messages.format(CorrectionMessages.ReturnTypeSubProcessor_missingreturntype_description, BindingLabelProvider.getBindingLabel(typeBinding, BindingLabelProvider.DEFAULT_TEXTFLAGS));
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-			LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, 6, image);
+			LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, IProposalRelevance.MISSING_RETURN_TYPE, image);
 
 			ImportRewrite imports= proposal.createImportRewrite(astRoot);
 			ImportRewriteContext importRewriteContext= new ContextSensitiveImportRewriteContext(decl, imports);
@@ -313,7 +313,7 @@ public class ReturnTypeSubProcessor {
 
 				String label= CorrectionMessages.ReturnTypeSubProcessor_changetovoid_description;
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 5, image);
+				ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.CHANGE_RETURN_TYPE_TO_VOID, image);
 				proposals.add(proposal);
 			}
 		}
@@ -337,7 +337,7 @@ public class ReturnTypeSubProcessor {
 			if (retType == null || retType.resolveBinding() == null) {
 				return;
 			}
-			TypeMismatchSubProcessor.addChangeSenderTypeProposals(context, expression, retType.resolveBinding(), false, 4, proposals);
+			TypeMismatchSubProcessor.addChangeSenderTypeProposals(context, expression, retType.resolveBinding(), false, IProposalRelevance.METHOD_RETURNS_VOID, proposals);
 		}
 	}
 }

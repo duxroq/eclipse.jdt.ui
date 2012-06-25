@@ -168,7 +168,7 @@ public class TypeMismatchSubProcessor {
 
 				String label= Messages.format(CorrectionMessages.TypeMismatchSubProcessor_changereturntype_description, BasicElementLabels.getJavaElementName(currBinding.getName()));
 				Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
-				LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, 6, image);
+				LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, IProposalRelevance.CHANGE_METHOD_RETURN_TYPE, image);
 
 				ImportRewrite imports= proposal.createImportRewrite(astRoot);
 				ImportRewriteContext importRewriteContext= new ContextSensitiveImportRewriteContext(decl, imports);
@@ -194,10 +194,10 @@ public class TypeMismatchSubProcessor {
 			if (currBinding.isWildcardType()) {
 				currBinding= ASTResolving.normalizeWildcardType(currBinding, true, ast);
 			}
-			addChangeSenderTypeProposals(context, receiverNode, currBinding, true, 6, proposals);
+			addChangeSenderTypeProposals(context, receiverNode, currBinding, true, IProposalRelevance.CHANGE_TYPE_1, proposals);
 		}
 
-		addChangeSenderTypeProposals(context, nodeToCast, castTypeBinding, false, 5, proposals);
+		addChangeSenderTypeProposals(context, nodeToCast, castTypeBinding, false, IProposalRelevance.CHANGE_TYPE_2, proposals);
 
 		if (castTypeBinding == ast.resolveWellKnownType("boolean") && currBinding != null && !currBinding.isPrimitive() && !Bindings.isVoidType(currBinding)) { //$NON-NLS-1$
 			String label= CorrectionMessages.TypeMismatchSubProcessor_insertnullcheck_description;
@@ -210,7 +210,7 @@ public class TypeMismatchSubProcessor {
 			expression.setOperator(InfixExpression.Operator.NOT_EQUALS);
 			rewrite.replace(nodeToCast, expression, null);
 
-			proposals.add(new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, 2, image));
+			proposals.add(new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, IProposalRelevance.INSERT_NULL_CHECK, image));
 		}
 
 	}
@@ -386,7 +386,7 @@ public class TypeMismatchSubProcessor {
 			}
 			String label= Messages.format(CorrectionMessages.TypeMismatchSubProcessor_removeexceptions_description, BasicElementLabels.getJavaElementName(methodDeclBinding.getName()));
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_REMOVE);
-			proposals.add(new ChangeMethodSignatureProposal(label, cu, astRoot, methodDeclBinding, null, changes, 8, image));
+			proposals.add(new ChangeMethodSignatureProposal(label, cu, astRoot, methodDeclBinding, null, changes, IProposalRelevance.REMOVE_EXCEPTIONS, image));
 		}
 
 		ITypeBinding declaringType= overridden.getDeclaringClass();
@@ -404,7 +404,7 @@ public class TypeMismatchSubProcessor {
 			String[] args= {  BasicElementLabels.getJavaElementName(declaringType.getName()), BasicElementLabels.getJavaElementName(overridden.getName()) };
 			String label= Messages.format(CorrectionMessages.TypeMismatchSubProcessor_addexceptions_description, args);
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_ADD);
-			proposals.add(new ChangeMethodSignatureProposal(label, targetCu, astRoot, overriddenDecl, null, changes, 7, image));
+			proposals.add(new ChangeMethodSignatureProposal(label, targetCu, astRoot, overriddenDecl, null, changes, IProposalRelevance.ADD_EXCEPTIONS, image));
 		}
 	}
 
@@ -453,7 +453,7 @@ public class TypeMismatchSubProcessor {
 		String label= Messages.format(CorrectionMessages.TypeMismatchSubProcessor_incompatible_for_each_type_description, new String[] { BasicElementLabels.getJavaElementName(parameter.getName().getIdentifier()), BindingLabelProvider.getBindingLabel(expectedBinding, BindingLabelProvider.DEFAULT_TEXTFLAGS) });
 		Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
 		ASTRewrite rewrite= ASTRewrite.create(ast);
-		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, 5, image);
+		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, IProposalRelevance.INCOMPATIBLE_FOREACH_TYPE, image);
 
 		ImportRewrite importRewrite= proposal.createImportRewrite(astRoot);
 		ImportRewriteContext importRewriteContext= new ContextSensitiveImportRewriteContext(ASTResolving.findParentBodyDeclaration(selectedNode), importRewrite);

@@ -315,6 +315,14 @@ public class JdtActionConstants {
 	 * (value <code>"org.eclipse.jdt.ui.actions.SelfEncapsulateField"</code>).
 	 */
 	public static final String SELF_ENCAPSULATE_FIELD= "org.eclipse.jdt.ui.actions.SelfEncapsulateField"; //$NON-NLS-1$
+	
+	/**
+	 * Refactor menu: name of standard Convert to AtomicInteger global action
+	 * (value <code>"org.eclipse.jdt.ui.actions.AtomicInteger"</code>).
+	 * @since 3.9
+	 */
+	
+	public static final String ATOMIC_INTEGER= "org.eclipse.jdt.ui.actions.AtomicInteger"; //$NON-NLS-1$
 
 	/**
 	 * Refactor menu: name of standard Modify Parameters global action

@@ -393,6 +393,13 @@ public interface IJavaEditorActionDefinitionIds extends ITextEditorActionDefinit
 	 * (value <code>"org.eclipse.jdt.ui.edit.text.java.self.encapsulate.field"</code>).
 	 */
 	public static final String SELF_ENCAPSULATE_FIELD= "org.eclipse.jdt.ui.edit.text.java.self.encapsulate.field"; //$NON-NLS-1$
+	
+	/**
+	 * Action definition ID of the refactor -> atomic integer field action
+	 * (value <code>"org.eclipse.jdt.ui.edit.text.java.atomic.integer"</code>).
+	 * @since 3.9
+	 */
+	public static final String ATOMIC_INTEGER= "org.eclipse.jdt.ui.edit.text.java.atomic.integer"; //$NON-NLS-1$
 
 	/**
 	 * Action definition ID of the refactor -> extract method action

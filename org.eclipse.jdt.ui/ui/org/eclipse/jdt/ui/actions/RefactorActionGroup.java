@@ -142,6 +142,11 @@ public class RefactorActionGroup extends ActionGroup {
 	 * @since 3.4
 	 */
 	public static final String GROUP_TYPE3= "typeGroup3"; //$NON-NLS-1$
+	
+	/**
+	 * @since 3.9
+	 */
+	public static final String GROUP_CONCURRENCY= "concurrencyGroup"; //$NON-NLS-1$
 
 	private IWorkbenchSite fSite;
 	private JavaEditor fEditor;
@@ -193,6 +198,8 @@ public class RefactorActionGroup extends ActionGroup {
 	private Action fNoActionAvailable= new NoActionAvailable();
 
 	private final ISelectionProvider fSelectionProvider;
+
+	private ConvertIntToAtomicIntegerAction fAtomicIntegerAction;
 
 	/**
 	 * Creates a new <code>RefactorActionGroup</code>. The group requires
@@ -321,6 +328,10 @@ public class RefactorActionGroup extends ActionGroup {
 			fSelfEncapsulateField= new SelfEncapsulateFieldAction(editor);
 			initAction(fSelfEncapsulateField, selection, IJavaEditorActionDefinitionIds.SELF_ENCAPSULATE_FIELD);
 			editor.setAction("SelfEncapsulateField", fSelfEncapsulateField); //$NON-NLS-1$
+			
+			fAtomicIntegerAction= new ConvertIntToAtomicIntegerAction(editor);
+			initAction(fAtomicIntegerAction, selection, IJavaEditorActionDefinitionIds.ATOMIC_INTEGER);
+			editor.setAction("ConvertToAtomicInteger", fAtomicIntegerAction); //$NON-NLS-1$
 
 			fIntroduceParameterObjectAction= new IntroduceParameterObjectAction(editor);
 			initAction(fIntroduceParameterObjectAction, selection, IJavaEditorActionDefinitionIds.INTRODUCE_PARAMETER_OBJECT);
@@ -382,6 +393,9 @@ public class RefactorActionGroup extends ActionGroup {
 
 			fSelfEncapsulateField= new SelfEncapsulateFieldAction(fSite);
 			initUpdatingAction(fSelfEncapsulateField, fSelectionProvider, selectionProvider, selection, IJavaEditorActionDefinitionIds.SELF_ENCAPSULATE_FIELD);
+			
+			fAtomicIntegerAction= new ConvertIntToAtomicIntegerAction(fSite);
+			initUpdatingAction(fAtomicIntegerAction, fSelectionProvider, selectionProvider, selection, IJavaEditorActionDefinitionIds.ATOMIC_INTEGER);
 
 			fIntroduceParameterObjectAction= new IntroduceParameterObjectAction(fSite);
 			initUpdatingAction(fIntroduceParameterObjectAction, fSelectionProvider, selectionProvider, selection, IJavaEditorActionDefinitionIds.INTRODUCE_PARAMETER_OBJECT);
@@ -471,6 +485,7 @@ public class RefactorActionGroup extends ActionGroup {
 		super.fillActionBars(actionBars);
 		if (!fBinary) {
 			actionBars.setGlobalActionHandler(JdtActionConstants.SELF_ENCAPSULATE_FIELD, fSelfEncapsulateField);
+			actionBars.setGlobalActionHandler(JdtActionConstants.ATOMIC_INTEGER, fAtomicIntegerAction);
 			actionBars.setGlobalActionHandler(JdtActionConstants.MOVE, fMoveAction);
 			actionBars.setGlobalActionHandler(JdtActionConstants.RENAME, fRenameAction);
 			actionBars.setGlobalActionHandler(JdtActionConstants.MODIFY_PARAMETERS, fModifyParametersAction);
@@ -526,6 +541,7 @@ public class RefactorActionGroup extends ActionGroup {
 	public void dispose() {
 		if (!fBinary) {
 			disposeAction(fSelfEncapsulateField, fSelectionProvider);
+			disposeAction(fAtomicIntegerAction, fSelectionProvider);
 			disposeAction(fMoveAction, fSelectionProvider);
 			disposeAction(fRenameAction, fSelectionProvider);
 			disposeAction(fModifyParametersAction, fSelectionProvider);
@@ -624,6 +640,10 @@ public class RefactorActionGroup extends ActionGroup {
 		refactorSubmenu.add(new Separator(GROUP_TYPE3));
 		added+= addAction(refactorSubmenu, fChangeTypeAction);
 		added+= addAction(refactorSubmenu, fInferTypeArgumentsAction);
+		
+		refactorSubmenu.add(new Separator(GROUP_CONCURRENCY));
+		added+= addAction(refactorSubmenu, fAtomicIntegerAction);
+		
 		return added;
 	}
 

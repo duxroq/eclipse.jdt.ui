@@ -272,6 +272,10 @@ public final class ActionMessages extends NLS {
 	public static String OrganizeImportsAction_error_title;
 	public static String OrganizeImportsAction_error_message;
 	public static String OrganizeImportsAction_single_error_parse;
+	public static String AtomicIntegerAction_label;
+	public static String AtomicIntegerAction_dialog_title;
+	public static String AtomicIntegerAction_dialog_unavailable;
+	public static String AtomicIntegerAction_dialog_cannot_perform;
 	
 	/**
 	 * DO NOT REMOVE, used in a product, see https://bugs.eclipse.org/296836 .

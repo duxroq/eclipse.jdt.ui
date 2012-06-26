@@ -225,6 +225,31 @@ public final class RefactoringAvailabilityTester {
 			return RefactoringAvailabilityTester.isConvertAnonymousAvailable(type);
 		return false;
 	}
+	
+	public static boolean isConvertAtomicIntegerAvailable(final JavaTextSelection selection) throws JavaModelException {
+		final IJavaElement[] elements= selection.resolveElementAtOffset();
+		if (elements.length != 1)
+			return false;
+		return (elements[0] instanceof IField) && isConvertAtomicIntegerAvailable((IField) elements[0]);
+	}
+	
+	public static boolean isConvertAtomicIntegerAvailable(final IStructuredSelection selection) throws JavaModelException {
+		if (selection.size() == 1) {
+			if (selection.getFirstElement() instanceof IField) {
+				final IField field= (IField) selection.getFirstElement();
+				return Checks.isAvailable(field) && !JdtFlags.isEnum(field);
+			}
+		}
+		return false;
+	}
+
+	public static boolean isConvertAtomicIntegerAvailable(IField iField) throws JavaModelException {
+		return ((iField != null)
+				&& (iField.exists())
+				&& (iField.isStructureKnown())
+				&& (!iField.getDeclaringType().isAnnotation())
+				&& ("I".equals(iField.getTypeSignature()))); //$NON-NLS-1$
+	}
 
 	public static boolean isCopyAvailable(final IResource[] resources, final IJavaElement[] elements) throws JavaModelException {
 		return ReorgPolicyFactory.createCopyPolicy(resources, elements).canEnable();

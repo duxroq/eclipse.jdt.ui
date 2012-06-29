@@ -2453,6 +2453,7 @@
             <separator name="typeGroup2"/>
             <separator name="codingGroup2"/>
             <separator name="typeGroup3"/>
+            <separator name="concurrencyGroup"/>
             <separator name="scriptGroup"/>
          </menu>
          
@@ -2640,6 +2641,36 @@
                retarget="true"
                menubarPath="org.eclipse.jdt.ui.refactoring.menu/typeGroup3"
                id="org.eclipse.jdt.ui.actions.ChangeType">
+         </action>
+         
+<!-- concurrency group  -->
+		<action
+               definitionId="org.eclipse.jdt.ui.edit.text.java.convert.to.atomicinteger"
+               label="Convert to AtomicInteger"
+               retarget="true"
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/concurrencyGroup"
+               id="org.eclipse.jdt.ui.actions.ConvertIntToAtomicIntegerAction">
+         </action>
+          <action
+               definitionId="org.eclipse.jdt.ui.edit.text.java.convert.to.atomiclong"
+               label="Convert to AtomicLong"
+               retarget="true"
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/concurrencyGroup"
+               id="org.eclipse.jdt.ui.actions.ConvertLongToAtomicLongAction">
+         </action>
+         <action
+               definitionId="org.eclipse.jdt.ui.edit.text.java.convert.to.concurrenthashmap"
+               label="Convert to ConcurrentHashMap"
+               retarget="true"
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/concurrencyGroup"
+               id="org.eclipse.jdt.ui.actions.ConvertHashMapToConcurrentAction">
+         </action>
+         <action
+               definitionId="org.eclipse.jdt.ui.edit.text.java.convert.recursion.to.fjtask"
+               label="Convert Recursion to FJTask"
+               retarget="true"
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/concurrencyGroup"
+               id="org.eclipse.jdt.ui.actions.ConvertToFJTaskAction">
          </action>
 
 <!-- script group  -->

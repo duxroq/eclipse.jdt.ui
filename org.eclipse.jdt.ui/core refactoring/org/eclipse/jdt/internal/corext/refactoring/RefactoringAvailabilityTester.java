@@ -225,6 +225,21 @@ public final class RefactoringAvailabilityTester {
 			return RefactoringAvailabilityTester.isConvertAnonymousAvailable(type);
 		return false;
 	}
+	
+	public static boolean isConvertAtomicIntegerAvailable(final JavaTextSelection selection) throws JavaModelException {
+		final IJavaElement[] elements= selection.resolveElementAtOffset();
+		if (elements.length != 1)
+			return false;
+		return (elements[0] instanceof IField) && isConvertAtomicIntegerAvailable((IField) elements[0]);
+	}
+
+	private static boolean isConvertAtomicIntegerAvailable(IField iField) throws JavaModelException {
+		return ((iField != null)
+				&& (iField.exists())
+				&& (iField.isStructureKnown())
+				&& (!iField.getDeclaringType().isAnnotation())
+				&& ("I".equals(iField.getTypeSignature()))); //$NON-NLS-1$
+	}
 
 	public static boolean isCopyAvailable(final IResource[] resources, final IJavaElement[] elements) throws JavaModelException {
 		return ReorgPolicyFactory.createCopyPolicy(resources, elements).canEnable();

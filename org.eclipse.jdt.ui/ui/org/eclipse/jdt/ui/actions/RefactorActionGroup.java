@@ -142,6 +142,11 @@ public class RefactorActionGroup extends ActionGroup {
 	 * @since 3.4
 	 */
 	public static final String GROUP_TYPE3= "typeGroup3"; //$NON-NLS-1$
+	
+	/**
+	 * @since 3.9
+	 */
+	public static final String GROUP_CONCURRENCY= "concurrencyGroup"; //$NON-NLS-1$
 
 	private IWorkbenchSite fSite;
 	private JavaEditor fEditor;

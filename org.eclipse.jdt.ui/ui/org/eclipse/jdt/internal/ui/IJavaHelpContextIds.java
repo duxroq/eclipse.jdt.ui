@@ -180,6 +180,11 @@ public interface IJavaHelpContextIds {
 	 * @since 3.6
 	 */
 	public static final String OPEN_IMPLEMENTATION_ACTION= 					PREFIX + "open_implementation_action"; //$NON-NLS-1$
+	
+	/**
+	 * @since 3.9
+	 */
+	public static final String ATOMIC_INTEGER_ACTION=						PREFIX + "atomic_integer_action"; //$NON-NLS-1$
 
 	/**
 	 * @since 3.2

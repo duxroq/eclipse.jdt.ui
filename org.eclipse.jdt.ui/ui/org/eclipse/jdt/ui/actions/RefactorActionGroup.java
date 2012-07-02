@@ -526,6 +526,7 @@ public class RefactorActionGroup extends ActionGroup {
 	public void dispose() {
 		if (!fBinary) {
 			disposeAction(fSelfEncapsulateField, fSelectionProvider);
+			disposeAction(fAtomicIntegerAction, fSelectionProvider);
 			disposeAction(fMoveAction, fSelectionProvider);
 			disposeAction(fRenameAction, fSelectionProvider);
 			disposeAction(fModifyParametersAction, fSelectionProvider);

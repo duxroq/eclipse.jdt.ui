@@ -4,7 +4,7 @@ import junit.framework.Test;
 
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.ui.tests.refactoring.infra.RefactoringTestSetup;
+import org.eclipse.jdt.ui.tests.refactoring.RefactoringTestSetup;
 
 public class ConvertToAtomicIntegerTestSetup extends RefactoringTestSetup {
 	

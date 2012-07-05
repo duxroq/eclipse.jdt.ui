@@ -12,7 +12,7 @@ import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.ui.tests.refactoring.infra.AbstractSelectionTestCase;
+import org.eclipse.jdt.ui.tests.refactoring.AbstractSelectionTestCase;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {

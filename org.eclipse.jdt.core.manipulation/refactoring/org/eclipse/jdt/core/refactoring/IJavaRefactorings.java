@@ -14,6 +14,7 @@ import org.eclipse.ltk.core.refactoring.PerformRefactoringOperation;
 import org.eclipse.ltk.core.refactoring.RefactoringContribution;
 import org.eclipse.ltk.core.refactoring.RefactoringCore;
 
+import org.eclipse.jdt.core.refactoring.descriptors.AtomicIntegerRefactoringDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.ChangeMethodSignatureDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.ConvertAnonymousDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.ConvertLocalVariableDescriptor;
@@ -71,6 +72,17 @@ import org.eclipse.jdt.core.refactoring.descriptors.UseSupertypeDescriptor;
  * @noextend This interface is not intended to be extended by clients.
  */
 public interface IJavaRefactorings {
+	
+	/**
+	 * Refactoring id of the 'Convert in to AtomicInteger' refactoring (value:
+	 * <code>org.eclipse.jdt.ui.atomic.integer</code>).
+	 * <p>
+	 * Clients may safely cast the obtained refactoring descriptor to
+	 * {@link AtomicIntegerRefactoringDescriptor}.
+	 * @since 1.6
+	 * </p>
+	 */
+	public static final String ATOMIC_INTEGER= "org.eclipse.jdt.ui.atomic.integer"; //$NON-NLS-1$
 
 	/**
 	 * Refactoring id of the 'Change Method Signature' refactoring (value:

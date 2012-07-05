@@ -77,7 +77,6 @@ import org.eclipse.jdt.ui.JavaElementLabels;
 
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
-//import org.eclipse.jdt.internal.corext.dom.NodeFinder;
 
 public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 
@@ -89,7 +88,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	private TextChangeManager fChangeManager;
 	private ImportRewrite fImportRewrite;
 	private boolean initializeDeclaration;
-	private static final String LINKED_NAME= "name"; //$NON-NLS-1$
 
 	public ConvertToAtomicIntegerRefactoring(IField field) {
 		
@@ -194,7 +192,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		ASTNode typeToReplace= oldFieldDeclaration.getType();
 		TextEditGroup gd= new TextEditGroup("ChangeType"); //$NON-NLS-1$
 		
-		List fragments= oldFieldDeclaration.fragments();
+		List<?> fragments= oldFieldDeclaration.fragments();
 		
 		AST ast= root.getAST();
 		VariableDeclarationFragment newVariableDeclarationFragment= ast.newVariableDeclarationFragment();
@@ -242,7 +240,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		return null;
 	}
 	
-	private void createEdits(ICompilationUnit unit, ASTRewrite rewriter, List groups, ImportRewrite importRewrite) throws CoreException {
+	private void createEdits(ICompilationUnit unit, ASTRewrite rewriter, List<?> groups, ImportRewrite importRewrite) throws CoreException {
 		
 		TextChange change= fChangeManager.get(unit);
 		MultiTextEdit root= new MultiTextEdit();
@@ -252,7 +250,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		TextChangeCompatibility.addTextEdit(fChangeManager.get(unit), "Update Imports", importEdit); //$NON-NLS-1$
 		
 		root.addChild(rewriter.rewriteAST());
-		for (Iterator iter= groups.iterator(); iter.hasNext();) {
+		for (Iterator<?> iter= groups.iterator(); iter.hasNext();) {
 			change.addTextEditGroup((TextEditGroup)iter.next());
 		}
 	}
@@ -350,7 +348,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		//final JavaRefactoringDescriptor descriptor= new JavaRefactoringDescriptor(IJavaRefactorings.ENCAPSULATE_FIELD, project, description, comment, arguments, flags) {};
 		
 		// TODO refactoring id?
-		final AtomicIntegerRefactoringDescriptor descriptor= new AtomicIntegerRefactoringDescriptor("My refactoring id", project, description, comment.asString(), arguments, flags);  //$NON-NLS-1$
+		final AtomicIntegerRefactoringDescriptor descriptor= new AtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);  //$NON-NLS-1$
 		//JDTRefactoringDescriptor(IJavaRefactorings.ENCAPSULATE_FIELD, project, description, comment, arguments, flags);
 		
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
@@ -384,7 +382,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		try {
 			fField.rename(text, true, null);
 		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
 			return RefactoringStatus.createErrorStatus("Java Model Exception: rename field"); //$NON-NLS-1$
 		}
 		return RefactoringStatus.createInfoStatus("rename OK"); //$NON-NLS-1$

@@ -38,6 +38,7 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String AtomicIntegerRefactoring_compiler_errors;
 	public static String AtomicIntegerRefactoring_name;
 	public static String AtomicIntegerRefactoring_create_changes;
+	public static String AtomicIntegerWizard_name;
 	
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, ConcurrencyRefactorings.class);

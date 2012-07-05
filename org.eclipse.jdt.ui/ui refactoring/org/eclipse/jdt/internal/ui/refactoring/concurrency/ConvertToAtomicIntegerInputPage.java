@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 
+import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConcurrencyRefactorings;
 import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 
 import org.eclipse.jdt.internal.ui.refactoring.RefactoringMessages;
@@ -116,7 +117,7 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 		if (severity >= RefactoringStatus.INFO) {
 			setMessage(message, severity);
 		} else {
-			setMessage("", NONE); //$NON-NLS-1$
+			setMessage(ConcurrencyRefactorings.ConcurrencyRefactorings_empty_string, NONE);
 		}
 	}
 }

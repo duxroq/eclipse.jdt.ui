@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.ui.refactoring.concurrency.ConvertToAtomicIntege
 public class ConvertToAtomicIntegerEditorAction implements IEditorActionDelegate{
 
 	private JavaEditor fEditor;
+	private ITextSelection fTextSelection;
 
 	public void setActiveEditor(IAction action, IEditorPart targetEditor) {
 		
@@ -58,13 +59,10 @@ public class ConvertToAtomicIntegerEditorAction implements IEditorActionDelegate
 				}
 			}
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		MessageDialog.openError(getShell(), ActionMessages.AtomicIntegerAction_dialog_cannot_perform,

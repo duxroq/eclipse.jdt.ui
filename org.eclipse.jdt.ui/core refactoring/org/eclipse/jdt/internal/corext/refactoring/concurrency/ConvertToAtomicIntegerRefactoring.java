@@ -81,7 +81,7 @@ import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 
 public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 
-	private static final String NO_NAME= ""; //$NON-NLS-1$
+	private static final String NO_NAME= ConcurrencyRefactorings.ConcurrencyRefactorings_empty_string;
 	private IField fField;
 	private CompilationUnit fRoot;
 	private VariableDeclarationFragment fFieldDeclarationFragment;
@@ -104,13 +104,13 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		RefactoringStatus result= new RefactoringStatus();
 		
 		fChangeManager.clear();
-		pm.beginTask("", 12); //$NON-NLS-1$
-		pm.setTaskName("Convert to AtomicInteger checking preconditions"); //$NON-NLS-1$
+		pm.beginTask(ConcurrencyRefactorings.ConcurrencyRefactorings_empty_string, 12);
+		pm.setTaskName(ConcurrencyRefactorings.AtomicIntegerRefactoring_precondition_check);
 		pm.worked(1);
 		if (result.hasFatalError()) {
 			return result;
 		}
-		pm.setTaskName("ConvertToAtomicInteger searching for cunits");  //$NON-NLS-1$
+		pm.setTaskName(ConcurrencyRefactorings.AtomicIntegerRefactoring_searching_cunits);
 		final SubProgressMonitor subPm= new SubProgressMonitor(pm, 5);
 		ICompilationUnit[] affectedCUs= RefactoringSearchEngine.findAffectedCompilationUnits(
 			SearchPattern.createPattern(fField, IJavaSearchConstants.ALL_OCCURRENCES), 
@@ -121,9 +121,9 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		if (result.hasFatalError()) {
 			return result;
 		}
-		pm.setTaskName("Analyzing the field");	  //$NON-NLS-1$
+		pm.setTaskName(ConcurrencyRefactorings.ConcurrencyRefactorings_program_name);
 		IProgressMonitor sub= new SubProgressMonitor(pm, 5);
-		sub.beginTask("", affectedCUs.length); //$NON-NLS-1$
+		sub.beginTask(ConcurrencyRefactorings.ConcurrencyRefactorings_empty_string, affectedCUs.length);
 		IVariableBinding fieldIdentifier= fFieldDeclarationFragment.resolveBinding();
 		ITypeBinding declaringClass= 
 			((AbstractTypeDeclaration) ASTNodes.getParent(fFieldDeclarationFragment, AbstractTypeDeclaration.class)).resolveBinding();
@@ -187,11 +187,11 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	private Collection<TextEditGroup> addChangeDeclaringType(CompilationUnit root) {
 		
 		Type newType= null;
-		newType= root.getAST().newSimpleType(ASTNodeFactory.newName(root.getAST(), "AtomicInteger")); //$NON-NLS-1$
+		newType= root.getAST().newSimpleType(ASTNodeFactory.newName(root.getAST(), ConcurrencyRefactorings.AtomicIntegerRefactoring_atomic_integer));
 		
 		FieldDeclaration oldFieldDeclaration= (FieldDeclaration) ASTNodes.getParent(fFieldDeclarationFragment, FieldDeclaration.class);
 		ASTNode typeToReplace= oldFieldDeclaration.getType();
-		TextEditGroup gd= new TextEditGroup("ChangeType"); //$NON-NLS-1$
+		TextEditGroup gd= new TextEditGroup(ConcurrencyRefactorings.AtomicIntegerRefactoring_change_type);
 		
 		List<?> fragments= oldFieldDeclaration.fragments();
 		
@@ -203,7 +203,8 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		if (initializeDeclaration) {
 			Expression initializer= fFieldDeclarationFragment.getInitializer();
 			ClassInstanceCreation atomicInstanceCreation= root.getAST().newClassInstanceCreation();
-			atomicInstanceCreation.setType(root.getAST().newSimpleType(ASTNodeFactory.newName(root.getAST(), "AtomicInteger"))); //$NON-NLS-1$
+			atomicInstanceCreation.setType(root.getAST().newSimpleType(ASTNodeFactory.newName(root.getAST(),
+					ConcurrencyRefactorings.AtomicIntegerRefactoring_atomic_integer)));
 			if (initializer != null) {
 				atomicInstanceCreation.arguments().add(fRewriter.createCopyTarget(initializer));
 			}
@@ -248,7 +249,8 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		
 		change.setEdit(root);
 		TextEdit importEdit= importRewrite.rewriteImports(null);
-		TextChangeCompatibility.addTextEdit(fChangeManager.get(unit), "Update Imports", importEdit); //$NON-NLS-1$
+		TextChangeCompatibility.addTextEdit(fChangeManager.get(unit),
+				ConcurrencyRefactorings.ConcurrencyRefactorings_update_imports, importEdit);
 		
 		root.addChild(rewriter.rewriteAST());
 		for (Iterator<?> iter= groups.iterator(); iter.hasNext();) {
@@ -279,7 +281,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		}
 		if (fFieldDeclarationFragment.resolveBinding() == null) {
 			if (!processCompilerError(result, node)) {
-				result.addFatalError("type not resolveable"); //$NON-NLS-1$
+				result.addFatalError(ConcurrencyRefactorings.ConcurrencyRefactorings_type_error);
 			}
 			return result;
 		}
@@ -299,7 +301,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	private String getMappingErrorMessage() {
 		
 		return Messages.format(
-			"Convert to AtomicInteger cannot analyze selected field",  //$NON-NLS-1$
+			ConcurrencyRefactorings.AtomicIntegerRefactoring_mapping_error,
 			new String[] {fField.getElementName()});
 	}
 
@@ -310,7 +312,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 			return false;
 		}
 		result.addFatalError(Messages.format(
-			"Compiler errors with the field to be refactored",   //$NON-NLS-1$
+			ConcurrencyRefactorings.ConcurrencyRefactorings_field_compile_error,
 			new String[] { fField.getElementName(), messages[0].getMessage()}));
 		return true;
 	}
@@ -335,9 +337,8 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 			JavaPlugin.log(exception);
 		}
 
-		//TODO need to properly initialize the arguments so that this refactoring becomes recordable
 		final HashMap<String, String> arguments= new HashMap<String, String>();
-		String description= "Convert int to AtomicInteger"; //$NON-NLS-1$
+		String description= ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
 		final JDTRefactoringDescriptorComment comment= new JDTRefactoringDescriptorComment(project, this,
 				Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_descriptor_description,
 				new String[] { JavaElementLabels.getTextLabel(fField, JavaElementLabels.ALL_FULLY_QUALIFIED), 
@@ -353,7 +354,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		final DynamicValidationRefactoringChange result= new DynamicValidationRefactoringChange(descriptor, getName());
 		TextChange[] changes= fChangeManager.getAllChanges();
 		pm.beginTask(NO_NAME, changes.length);
-		pm.setTaskName("ConvertToAtomicInteger create changes"); //$NON-NLS-1$
+		pm.setTaskName(ConcurrencyRefactorings.AtomicIntegerRefactoring_create_changes);
 		for (int i= 0; i < changes.length; i++) {
 			result.add(changes[i]);
 			pm.worked(1);
@@ -364,11 +365,10 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 
 	@Override
 	public String getName() {
-		return "Convert to AtomicInteger"; //$NON-NLS-1$
+		return ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
 	}
 
 	public void setField(IField field) {
-		
 		this.fField= field;
 	}
 
@@ -389,12 +389,10 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	}
 
 	public IField getField() {
-		
 		return fField;
 	}
 
 	public String getFieldName() {
-		
 		return fField.getElementName();
 	}
 
@@ -415,7 +413,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 			IProblem problem= messages[i];
 			if (!isIgnorableProblem(problem)) {
 				result.addError(Messages.format(
-						"ConvertToAtomicInteger: Compiler errors",  //$NON-NLS-1$
+						ConcurrencyRefactorings.AtomicIntegerRefactoring_compiler_errors,
 						element.getElementName()), JavaStatusContext.create(element));
 				return;
 			}

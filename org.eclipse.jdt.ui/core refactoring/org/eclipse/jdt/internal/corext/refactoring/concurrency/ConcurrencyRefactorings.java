@@ -30,6 +30,14 @@ public final class ConcurrencyRefactorings extends NLS {
 	
 	public static String AtomicIntegerRefactoring_descriptor_description;
 	public static String AtomicIntegerRefactoring_field_pattern;
+	public static String AtomicIntegerRefactoring_searching_cunits;
+	public static String AtomicIntegerRefactoring_precondition_check;
+	public static String AtomicIntegerRefactoring_change_type;
+	public static String AtomicIntegerRefactoring_atomic_integer;
+	public static String AtomicIntegerRefactoring_mapping_error;
+	public static String AtomicIntegerRefactoring_compiler_errors;
+	public static String AtomicIntegerRefactoring_name;
+	public static String AtomicIntegerRefactoring_create_changes;
 	
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, ConcurrencyRefactorings.class);

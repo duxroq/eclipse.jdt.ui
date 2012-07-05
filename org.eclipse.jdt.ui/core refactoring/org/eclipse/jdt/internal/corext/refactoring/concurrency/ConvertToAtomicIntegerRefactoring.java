@@ -60,6 +60,7 @@ import org.eclipse.jdt.internal.corext.dom.ASTNodeFactory;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jdt.internal.corext.dom.ModifierRewrite;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
+import org.eclipse.jdt.internal.corext.refactoring.JDTRefactoringDescriptorComment;
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringDescriptorUtil;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringScopeFactory;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringSearchEngine;
@@ -72,8 +73,10 @@ import org.eclipse.jdt.internal.corext.refactoring.util.TextChangeManager;
 import org.eclipse.jdt.internal.corext.util.Messages;
 
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
+import org.eclipse.jdt.ui.JavaElementLabels;
 
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 //import org.eclipse.jdt.internal.corext.dom.NodeFinder;
 
 public class ConvertToAtomicIntegerRefactoring extends Refactoring {
@@ -336,10 +339,18 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		//TODO need to properly initialize the arguments so that this refactoring becomes recordable
 		final HashMap<String, String> arguments= new HashMap<String, String>();
 		String description= "Convert int to AtomicInteger"; //$NON-NLS-1$
-		String comment= "Convert int to AtomicInteger"; //$NON-NLS-1$
+		//String comment= "Convert int to AtomicInteger"; //$NON-NLS-1$
+		final JDTRefactoringDescriptorComment comment= new JDTRefactoringDescriptorComment(project, this,
+				Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_descriptor_description,
+				new String[] { JavaElementLabels.getTextLabel(fField, JavaElementLabels.ALL_FULLY_QUALIFIED), 
+						JavaElementLabels.getTextLabel(declaring, JavaElementLabels.ALL_FULLY_QUALIFIED)}));
+		comment.addSetting(Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_field_pattern,
+				BasicElementLabels.getJavaElementName(fField.getElementName())));
 		
 		//final JavaRefactoringDescriptor descriptor= new JavaRefactoringDescriptor(IJavaRefactorings.ENCAPSULATE_FIELD, project, description, comment, arguments, flags) {};
-		final AtomicIntegerRefactoringDescriptor descriptor= new AtomicIntegerRefactoringDescriptor("My refactoring id", project, description, comment, arguments, flags); 
+		
+		// TODO refactoring id?
+		final AtomicIntegerRefactoringDescriptor descriptor= new AtomicIntegerRefactoringDescriptor("My refactoring id", project, description, comment.asString(), arguments, flags);  //$NON-NLS-1$
 		//JDTRefactoringDescriptor(IJavaRefactorings.ENCAPSULATE_FIELD, project, description, comment, arguments, flags);
 		
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
@@ -360,7 +371,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 
 	@Override
 	public String getName() {
-		
 		return "Convert to AtomicInteger"; //$NON-NLS-1$
 	}
 

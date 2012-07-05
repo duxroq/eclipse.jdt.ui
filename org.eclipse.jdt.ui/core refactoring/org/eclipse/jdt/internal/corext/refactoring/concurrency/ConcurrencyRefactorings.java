@@ -28,6 +28,9 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String ConcurrencyRefactorings_unsafe_op_error_2;
 	public static String ConcurrencyRefactorings_unsafe_op_error_3;
 	
+	public static String AtomicIntegerRefactoring_descriptor_description;
+	public static String AtomicIntegerRefactoring_field_pattern;
+	
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, ConcurrencyRefactorings.class);
 	}

@@ -10,8 +10,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.refactoring.descriptors;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.core.refactoring.descriptors.AtomicIntegerRefactoringDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.ChangeMethodSignatureDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.ConvertAnonymousDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.ConvertLocalVariableDescriptor;
@@ -280,6 +282,10 @@ public class RefactoringSignatureDescriptorFactory {
 
 	public static UseSupertypeDescriptor createUseSupertypeDescriptor(String project, String description, String comment, Map arguments, int flags) {
 		return new UseSupertypeDescriptor(project, description, comment, arguments, flags);
+	}
+
+	public static AtomicIntegerRefactoringDescriptor createAtomicIntegerRefactoringDescriptor(String project, String description, String comment, HashMap arguments, int flags) {
+		return new AtomicIntegerRefactoringDescriptor(project, description, comment, arguments, flags);
 	}
 
 }

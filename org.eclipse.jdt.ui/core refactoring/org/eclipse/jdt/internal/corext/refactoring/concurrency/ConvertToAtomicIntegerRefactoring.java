@@ -55,6 +55,7 @@ import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchPattern;
 
+import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jdt.internal.corext.dom.ASTNodeFactory;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
@@ -337,7 +338,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		//TODO need to properly initialize the arguments so that this refactoring becomes recordable
 		final HashMap<String, String> arguments= new HashMap<String, String>();
 		String description= "Convert int to AtomicInteger"; //$NON-NLS-1$
-		//String comment= "Convert int to AtomicInteger"; //$NON-NLS-1$
 		final JDTRefactoringDescriptorComment comment= new JDTRefactoringDescriptorComment(project, this,
 				Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_descriptor_description,
 				new String[] { JavaElementLabels.getTextLabel(fField, JavaElementLabels.ALL_FULLY_QUALIFIED), 
@@ -345,15 +345,10 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		comment.addSetting(Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_field_pattern,
 				BasicElementLabels.getJavaElementName(fField.getElementName())));
 		
-		//final JavaRefactoringDescriptor descriptor= new JavaRefactoringDescriptor(IJavaRefactorings.ENCAPSULATE_FIELD, project, description, comment, arguments, flags) {};
-		
-		// TODO refactoring id?
-		final AtomicIntegerRefactoringDescriptor descriptor= new AtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);  //$NON-NLS-1$
-		//JDTRefactoringDescriptor(IJavaRefactorings.ENCAPSULATE_FIELD, project, description, comment, arguments, flags);
+		final AtomicIntegerRefactoringDescriptor descriptor= RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);
 		
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, fField.getElementName());
-		//TODO Use JavaRefactoringDescriptor instead but it is protected
 		
 		final DynamicValidationRefactoringChange result= new DynamicValidationRefactoringChange(descriptor, getName());
 		TextChange[] changes= fChangeManager.getAllChanges();

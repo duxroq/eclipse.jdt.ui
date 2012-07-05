@@ -2,6 +2,9 @@ package org.eclipse.jdt.core.refactoring.descriptors;
 
 import java.util.Map;
 
+/**
+ * @since 1.6
+ */
 public class AtomicIntegerRefactoringDescriptor extends JavaRefactoringDescriptor {
 
 	public AtomicIntegerRefactoringDescriptor(String id, String project, String description,

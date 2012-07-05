@@ -22,11 +22,10 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 
+import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jdt.internal.ui.actions.SelectionConverter;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.refactoring.concurrency.ConvertToAtomicIntegerWizard;
-//import mit.edu.concurrencyrefactorings.util.JavaEditor;
-//import mit.edu.concurrencyrefactorings.util.SelectionConverter;
 
 /**
  * @since 3.9
@@ -34,7 +33,6 @@ import org.eclipse.jdt.internal.ui.refactoring.concurrency.ConvertToAtomicIntege
 public class ConvertToAtomicIntegerEditorAction implements IEditorActionDelegate{
 
 	private JavaEditor fEditor;
-	private ITextSelection fTextSelection;
 
 	public void setActiveEditor(IAction action, IEditorPart targetEditor) {
 		
@@ -54,7 +52,8 @@ public class ConvertToAtomicIntegerEditorAction implements IEditorActionDelegate
 				
 				if (isRefactoringAvailableFor(field)) {
 					ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(field);
-					run(new ConvertToAtomicIntegerWizard(refactoring, "Convert to Atomic Integer"), getShell(), "Convert to Atomic Integer"); //$NON-NLS-1$ //$NON-NLS-2$
+					run(new ConvertToAtomicIntegerWizard(refactoring, ActionMessages.AtomicIntegerAction_dialog_title),
+							getShell(), ActionMessages.AtomicIntegerAction_dialog_title);
 					return;
 				}
 			}
@@ -68,7 +67,8 @@ public class ConvertToAtomicIntegerEditorAction implements IEditorActionDelegate
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		MessageDialog.openError(getShell(), "Error ConvertToAtomicInteger", "ConvertToAtomicInteger not applicable for current selection");  //$NON-NLS-1$ //$NON-NLS-2$
+		MessageDialog.openError(getShell(), ActionMessages.AtomicIntegerAction_dialog_cannot_perform,
+				ActionMessages.AtomicIntegerAction_dialog_unavailable);
 	}
 	
 	private boolean isRefactoringAvailableFor(IField field) throws JavaModelException {

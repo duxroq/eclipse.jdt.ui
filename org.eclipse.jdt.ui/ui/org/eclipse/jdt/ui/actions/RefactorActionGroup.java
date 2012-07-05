@@ -179,6 +179,7 @@ public class RefactorActionGroup extends ActionGroup {
 	private SelectionDispatchAction fIntroduceFactoryAction;
 	private SelectionDispatchAction fConvertLocalToFieldAction;
 	private SelectionDispatchAction fSelfEncapsulateField;
+	private SelectionDispatchAction fAtomicIntegerAction;
 
 	private UndoRedoActionGroup fUndoRedoActionGroup;
 

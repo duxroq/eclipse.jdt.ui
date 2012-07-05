@@ -13,14 +13,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import org.eclipse.jface.wizard.IWizardPage;
-
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 
 import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 
-public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage implements IWizardPage {
+import org.eclipse.jdt.internal.ui.refactoring.RefactoringMessages;
+
+public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 
 	Text fNameField;
 	private Button initializeDeclarationButton;
@@ -41,13 +41,13 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage impleme
 		result.setLayout(layout);
 
 		Label label= new Label(result, SWT.NONE);
-		label.setText("&Field name:"); //$NON-NLS-1$
+		label.setText(RefactoringMessages.ConvertToAtomicIntegerInputPage_getter_name);
 
 		fNameField= createNameField(result);
 		fNameField.setEditable(false);
 
 		initializeDeclarationButton= new Button(result, SWT.CHECK);
-		initializeDeclarationButton.setText("&Initialize field declaration"); //$NON-NLS-1$
+		initializeDeclarationButton.setText(RefactoringMessages.ConvertToAtomicIntegerInputPage_initialize_field_declaration_label);
 		GridData data= new GridData(GridData.FILL_HORIZONTAL);
 		data.horizontalSpan= 2;
 		data.verticalIndent= 2;

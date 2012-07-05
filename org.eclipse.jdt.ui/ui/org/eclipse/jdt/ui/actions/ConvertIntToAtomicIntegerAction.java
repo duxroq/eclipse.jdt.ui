@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.actions.SelectionConverter;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
@@ -64,7 +65,7 @@ public class ConvertIntToAtomicIntegerAction extends SelectionDispatchAction {
 	 */
 	public ConvertIntToAtomicIntegerAction(IWorkbenchSite site) {
 		super(site);
-		setText("Convert int to AtomicInteger"); //$NON-NLS-1$
+		setText(ActionMessages.AtomicIntegerAction_label);
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(this, IJavaHelpContextIds.ATOMIC_INTEGER_ACTION);
 	}
 	
@@ -176,15 +177,15 @@ public class ConvertIntToAtomicIntegerAction extends SelectionDispatchAction {
 				return;
 			IJavaElement[] elements= SelectionConverter.codeResolve(fEditor);
 			if (elements.length != 1 || !(elements[0] instanceof IField)) {
-				MessageDialog.openInformation(getShell(), //ActionMessages.AtomicIntegerAction_dialog_title, ActionMessages.AtomicIntegerAction_dialog_unavailable
-						"Convert Int to AtomicInteger", "Convert Int to Atomic Integer Unavailable"); //$NON-NLS-1$ //$NON-NLS-2$
+				MessageDialog.openInformation(getShell(), 
+						ActionMessages.AtomicIntegerAction_dialog_title, ActionMessages.AtomicIntegerAction_dialog_unavailable);
 				return;
 			}
 			IField field= (IField)elements[0];
 
 			if (!RefactoringAvailabilityTester.isConvertAtomicIntegerAvailable(field)) {
-				MessageDialog.openInformation(getShell(), //ActionMessages.AtomicIntegerAction_dialog_title, ActionMessages.AtomicIntegerAction_dialog_unavailable);
-						"Convert Int to AtomicInteger", "Convert Int to Atomic Integer Unavailable"); //$NON-NLS-1$ //$NON-NLS-2$
+				MessageDialog.openInformation(getShell(),
+						ActionMessages.AtomicIntegerAction_dialog_title, ActionMessages.AtomicIntegerAction_dialog_unavailable);
 				return;
 			}
 			run(field);

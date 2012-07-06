@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
@@ -121,48 +122,9 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			return true;
 		}
 		ASTNode statement= getParent(node, Statement.class);
-		// if parent is not an instance of ExpressionStatement . . . 	
-		if (!checkParent(node)) {
-			
-			if (statement instanceof ReturnStatement) {
-				Block body= (Block) getParent(node, Block.class);
-				AST ast= node.getAST();
-				
-				MethodInvocation getInvocation= ast.newMethodInvocation();
-				MethodInvocation setInvocation=	ast.newMethodInvocation();
-				
-				setInvocation.setName(ast.newSimpleName("set")); //$NON-NLS-1$
-				getInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
-				
-				Expression receiver= getReceiver(lhs);
-				if (receiver != null) {
-					// VIP!! Here we use node.coySubtree because the expresion/arguments might be overriden by the later code.
-					// If they are overriden later, using rewriter.createCopyTarget() will result in an orphan CopySourceEdit
-					// without a matching CoypTargetEdit. This would lead later to a MalformedTreeException
-					setInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
-					getInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
-				}
-				List<Expression> arguments= setInvocation.arguments();
-				Expression copyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
-				arguments.add(copyRHS);
-				
-				ListRewrite rewriter= fRewriter.getListRewrite(body, Block.STATEMENTS_PROPERTY);
-				ExpressionStatement setInvocationStatement= ast.newExpressionStatement(setInvocation);
-				rewriter.insertBefore(setInvocationStatement, statement, createGroupDescription(WRITE_ACCESS));
-				
-				ReturnStatement returnStatement= ast.newReturnStatement();
-				returnStatement.setExpression(getInvocation);
-				rewriter.replace(statement, returnStatement, createGroupDescription(READ_ACCESS));
-				
-				if (checkSynchronizedBlockForReturnStatement(node)) {
-					fStatus.addWarning("Synchronized block contains a return statement with an assigment.  " + //$NON-NLS-1$
-							"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
-				} else if (checkSynchronizedMethodForReturnStatement(node)) {
-					fStatus.addWarning("Synchronized method contains a return statement with an assigment.  " + //$NON-NLS-1$
-							"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
-				}
+		if (!checkParent(node) && statement instanceof ReturnStatement) {			
+				refactorReturnAtomicIntegerAssignment(node, (ReturnStatement) statement, lhs);
 				return true;
-			}
 		}
 		if (!fIsFieldFinal) {
 			// Write access.
@@ -206,32 +168,12 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 								ASTNode statementAbove= getParent(node, Statement.class);
 								Block body= (Block) getParent(node, Block.class);
 								
-								MethodInvocation getInvocation= ast.newMethodInvocation();
-								getInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
-								if (receiver != null) {
-									// VIP!! Here we use node.coySubtree because the expresion/arguments might be overriden by the later code.
-									// If they are overriden later, using rewriter.createCopyTarget() will result in an orphan CopySourceEdit
-									// without a matching CoypTargetEdit. This would lead later to a MalformedTreeException
-									getInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver)); 
-								}
-								List<Expression> setArguments= invocation.arguments();
-								// VIP!! Here we use node.coySubtree because the expresion/arguments might be overriden by the later code.
-								// If they are overriden later, using rewriter.createCopyTarget() will result in an orphan CopySourceEdit
-								// without a matching CoypTargetEdit. This would lead later to a MalformedTreeException
-								//Expression setCcopyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
-								InfixExpression setInfixExpression= ast.newInfixExpression();
+								Statement setInvocationStatement= refactorUnsafeArithmeticOperations(node, operator,
+										invocation, ast, receiver, infixExpression.getRightOperand());
 								
-								setInfixExpression.setOperator(operator);
-								setInfixExpression.setLeftOperand(getInvocation);
-								setInfixExpression.setRightOperand((Expression) ASTNode.copySubtree(ast, infixExpression.getRightOperand()));
-								setArguments.add(setInfixExpression);
-								ExpressionStatement setInvocationStatement= ast.newExpressionStatement(invocation);
-									
-								String todoComment= new String("// TODO The operations below cannot be executed atomically."); //$NON-NLS-1$
-								LineComment lc= (LineComment) fRewriter.createStringPlaceholder(todoComment, ASTNode.LINE_COMMENT);
-								ListRewrite lr= fRewriter.getListRewrite(body, Block.STATEMENTS_PROPERTY);
-								lr.insertBefore(lc, statementAbove, createGroupDescription(COMMENT));
-								lr.replace(statementAbove, setInvocationStatement, createGroupDescription(READ_AND_WRITE_ACCESS));
+								ListRewrite rewriter= insertLineCommentBeforeNode("// TODO The operations below cannot be executed atomically.",  //$NON-NLS-1$
+										body, statementAbove, Block.STATEMENTS_PROPERTY);
+								rewriter.replace(statementAbove, setInvocationStatement, createGroupDescription(READ_AND_WRITE_ACCESS));
 								needToVisitRHS= false;
 							}
 						}
@@ -254,35 +196,16 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					arguments.add(negativeExpression);
 				} else {
 					createUnsafeOperatorWarning(node);
-					ASTNode statementAbove= getParent(node, Statement.class);
+					Statement statementAbove= (Statement) getParent(node, Statement.class);
 					Block body= (Block) getParent(node, Block.class);
-					MethodInvocation getInvocation= ast.newMethodInvocation();
-					getInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
-					if (receiver != null) {
-						// VIP!! Here we use node.coySubtree because the expresion/arguments might be overriden by the later code.
-						// If they are overriden later, using rewriter.createCopyTarget() will result in an orphan CopySourceEdit
-						// without a matching CoypTargetEdit. This would lead later to a MalformedTreeException
-						getInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver)); 
-					}
-					List<Expression> setArguments= invocation.arguments();
-					// VIP!! Here we use node.coySubtree because the expresion/arguments might be overriden by the later code.
-					// If they are overriden later, using rewriter.createCopyTarget() will result in an orphan CopySourceEdit
-					// without a matching CoypTargetEdit. This would lead later to a MalformedTreeException
-					Expression setCopyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
 					Operator operatorFromAssignmentOperator= getOperatorFromAssignmentOperator(node.getOperator());
-					InfixExpression infixExpression= ast.newInfixExpression();
 					
-					infixExpression.setOperator(operatorFromAssignmentOperator);
-					infixExpression.setLeftOperand(getInvocation);
-					infixExpression.setRightOperand(setCopyRHS);
-					setArguments.add(infixExpression);
-					ExpressionStatement setInvocationStatement= ast.newExpressionStatement(invocation);
+					Statement setInvocationStatement= refactorUnsafeArithmeticOperations(node,
+							operatorFromAssignmentOperator, invocation, ast, receiver, node.getRightHandSide());
 					
-					String todoComment= new String("// TODO The operations below cannot be executed atomically."); //$NON-NLS-1$
-					LineComment lc= (LineComment) fRewriter.createStringPlaceholder(todoComment, ASTNode.LINE_COMMENT);
-					ListRewrite lr= fRewriter.getListRewrite(body, Block.STATEMENTS_PROPERTY);
-					lr.insertBefore(lc, statementAbove, createGroupDescription(COMMENT));
-					lr.replace(statement, setInvocationStatement, createGroupDescription(READ_AND_WRITE_ACCESS));
+					ListRewrite rewriter= insertLineCommentBeforeNode("// TODO The operations below cannot be executed atomically.", //$NON-NLS-1$
+							body, statementAbove, Block.STATEMENTS_PROPERTY);
+					rewriter.replace(statement, setInvocationStatement, createGroupDescription(READ_AND_WRITE_ACCESS));
 				}	
 			}
 			if ( !(checkSynchronizedBlock(node, invocation, WRITE_ACCESS) || checkSynchronizedMethod(node, invocation, WRITE_ACCESS)) ) {
@@ -303,10 +226,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		if (syncStatement != null) {
 			Block methodBlock= ((MethodDeclaration) methodDecl).getBody();
 			
-			String todoComment= new String("// TODO The statements in the block below are not properly synchronized."); //$NON-NLS-1$
-			LineComment lineComment= (LineComment) fRewriter.createStringPlaceholder(todoComment, ASTNode.LINE_COMMENT);
-			ListRewrite rewriter= fRewriter.getListRewrite(methodBlock, Block.STATEMENTS_PROPERTY);
-			rewriter.insertBefore(lineComment, syncStatement, createGroupDescription(COMMENT));
+			insertLineCommentBeforeNode("// TODO The statements in the block below are not properly synchronized.", //$NON-NLS-1$
+					methodBlock, syncStatement, Block.STATEMENTS_PROPERTY);
 			return true;
 		}	
 		return false;
@@ -332,47 +253,15 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				MethodDeclaration[] methods= typeDeclaration.getMethods();
 				for (int i = 0; i < methods.length; i++) {
 					if (methods[i] == methodDecl) {
-						String todoComment= new String("// TODO The statements in the method below are not properly synchronized."); //$NON-NLS-1$
-						LineComment lineComment= (LineComment) fRewriter.createStringPlaceholder(todoComment, ASTNode.LINE_COMMENT);
-						ListRewrite rewriter= fRewriter.getListRewrite(typeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-						rewriter.insertBefore(lineComment, methodDecl, createGroupDescription(COMMENT));
+						insertLineCommentBeforeNode("// TODO The statements in the method below are not properly synchronized.", //$NON-NLS-1$
+								typeDeclaration, methodDecl, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 						break;
 					}
 				}
 		//	}
-//			String todoComment= new String("// TODO The statements in the method below are not properly synchronized."); //$NON-NLS-1$
-//			LineComment lineComment= (LineComment) fRewriter.createStringPlaceholder(todoComment, ASTNode.LINE_COMMENT);
-//			ListRewrite rewriter= fRewriter.getListRewrite(methodDecl.getBody(), Block.STATEMENTS_PROPERTY);
-//			rewriter.insertBefore(lineComment, (ASTNode) methodBodyStatements.get(0), createGroupDescription(COMMENT)); //$NON-NLS-1$
-//			for (Iterator iterator= methodBodyStatements.iterator(); iterator.hasNext();) {
-//				Statement statement= (Statement) iterator.next();
-//				
-//			}
-//			if (methodBodyStatements.size() == 1) {
-//				ModifierRewrite methodRewriter= ModifierRewrite.create(fRewriter, methodDecl);
-//				int synchronized1= Modifier.SYNCHRONIZED;
-//				synchronized1= ~ synchronized1;
-//				int newModifiersWithoutSync= modifiers & synchronized1;
-//				methodRewriter.setModifiers(newModifiersWithoutSync, createGroupDescription(REMOVE_SYNCHRONIZED_MODIFIER));
-//			}
-			//checkMoreThanOneFieldReference((Statement)methodDecl.getBody().statements().get(0), methodDecl.getBody());
-			//checkMoreThanOneFieldReference(node, methodDecl.getBody());
-			//fRewriter.replace(node, invocation, createGroupDescription(accessType));
 			return true;
 		}
 		return false;
-	}
-
-	private void createUnsafeOperatorError(Assignment node) {
-		
-		fStatus.addError("Cannot execute " //$NON-NLS-1$
-				+ fFieldBinding.getName()
-				+ ".set(" //$NON-NLS-1$
-				+ fFieldBinding.getName()
-				+ ".get()) " //$NON-NLS-1$
-				+ "atomically. This would be required in converting " //$NON-NLS-1$
-				+ node.toString()
-				+ ". Consider using locks instead."); //$NON-NLS-1$
 	}
 	
 	private void createUnsafeOperatorWarning(Assignment node) {
@@ -389,7 +278,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 	
 	private void createErrorStatus(String message) {
-
 		fStatus.addError(message);
 	}
 
@@ -399,9 +287,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		PrefixExpression newPrefixExpression= ast.newPrefixExpression();
 		
 		newPrefixExpression.setOperator(PrefixExpression.Operator.MINUS);
-		boolean needsParentheses= // ASTNodes.needsParentheses(expression); 
-		needsParentheses(expression);
-		ASTNode copyExpression=  ASTNode.copySubtree(ast, expression);   //fRewriter.createCopyTarget(expression);
+		boolean needsParentheses= needsParentheses(expression);
+		ASTNode copyExpression=  ASTNode.copySubtree(ast, expression);
 		if (needsParentheses) {
 			ParenthesizedExpression p= ast.newParenthesizedExpression();
 			p.setExpression((Expression) copyExpression);
@@ -477,7 +364,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	
 	@Override
 	public void endVisit(CompilationUnit node) {
-		
 		fImportRewriter.addImport("java.util.concurrent.atomic.AtomicInteger"); //$NON-NLS-1$
 	}
 	
@@ -531,7 +417,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		for (Iterator<?> iterator= statements.iterator(); iterator.hasNext();) {
 			Statement statement= (Statement) iterator.next();
 			if (!statement.equals(enclosingStatement)){
-				//fStatus.addWarning("Visited:" + statement.toString());
 				statement.accept(new ASTVisitor(){
 					@Override
 					public boolean visit(SimpleName identifier){
@@ -566,18 +451,14 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				if (refactoringStatusEntry.getMessage().matches(
 						"Synchronized block contains references to another field.*AtomicInteger cannot preserve invariants over two field accesses, " + //$NON-NLS-1$
 						".*consider using locks instead.")) { //$NON-NLS-1$
-					String todoComment= new String("// TODO The statement below is not properly synchronized."); //$NON-NLS-1$
-					LineComment lc= (LineComment) fRewriter.createStringPlaceholder(todoComment, ASTNode.LINE_COMMENT);
-					ListRewrite lr= fRewriter.getListRewrite(syncBody, Block.STATEMENTS_PROPERTY);
-					lr.insertBefore(lc, statement, createGroupDescription(COMMENT));
+					insertLineCommentBeforeNode("// TODO The statement below is not properly synchronized.", //$NON-NLS-1$ 
+							syncBody, statement, Block.STATEMENTS_PROPERTY);
 				}
 			}	
 		}
 		if (numEntries < (fStatus.getEntries().length + 1)) {
-				String todoComment= new String("// TODO The statement below is not properly synchronized."); //$NON-NLS-1$
-				LineComment lineComment= (LineComment) fRewriter.createStringPlaceholder(todoComment, ASTNode.LINE_COMMENT);
-				ListRewrite rewriter= fRewriter.getListRewrite(syncBody, Block.STATEMENTS_PROPERTY);
-				rewriter.insertBefore(lineComment, enclosingStatement, createGroupDescription(COMMENT)); //$NON-NLS-1$
+				insertLineCommentBeforeNode("// TODO The statement below is not properly synchronized.", //$NON-NLS-1$
+						syncBody, enclosingStatement, Block.STATEMENTS_PROPERTY);
 		}
 	}
 
@@ -712,5 +593,69 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			// will never occur
 			return null;
 		}
+	}
+	
+	private ListRewrite insertLineCommentBeforeNode(String comment, ASTNode body, ASTNode node, ChildListPropertyDescriptor descriptor) {
+		
+		LineComment lineComment= (LineComment) fRewriter.createStringPlaceholder(comment, ASTNode.LINE_COMMENT);
+		ListRewrite rewriter= fRewriter.getListRewrite(body, Block.STATEMENTS_PROPERTY);
+		rewriter.insertBefore(lineComment, node, createGroupDescription(COMMENT));
+		return rewriter;
+	}
+	
+	private void refactorReturnAtomicIntegerAssignment(Assignment node, ReturnStatement statement, Expression leftHandSide) {
+		
+		Block body= (Block) getParent(node, Block.class);
+		AST ast= node.getAST();
+		
+		MethodInvocation getInvocation= ast.newMethodInvocation();
+		MethodInvocation setInvocation=	ast.newMethodInvocation();
+		
+		setInvocation.setName(ast.newSimpleName("set")); //$NON-NLS-1$
+		getInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
+		
+		Expression receiver= getReceiver(leftHandSide);
+		if (receiver != null) {
+			setInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
+			getInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
+		}
+		List<Expression> arguments= setInvocation.arguments();
+		Expression copyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
+		arguments.add(copyRHS);
+		
+		ListRewrite rewriter= fRewriter.getListRewrite(body, Block.STATEMENTS_PROPERTY);
+		ExpressionStatement setInvocationStatement= ast.newExpressionStatement(setInvocation);
+		rewriter.insertBefore(setInvocationStatement, statement, createGroupDescription(WRITE_ACCESS));
+		
+		ReturnStatement returnStatement= ast.newReturnStatement();
+		returnStatement.setExpression(getInvocation);
+		rewriter.replace(statement, returnStatement, createGroupDescription(READ_ACCESS));
+		
+		if (checkSynchronizedBlockForReturnStatement(node)) {
+			createErrorStatus("Synchronized block contains a return statement with an assigment.  " + //$NON-NLS-1$
+					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
+		} else if (checkSynchronizedMethodForReturnStatement(node)) {
+			createErrorStatus("Synchronized method contains a return statement with an assigment.  " + //$NON-NLS-1$
+					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
+		}
+	}
+	
+	private Statement refactorUnsafeArithmeticOperations(ASTNode node, InfixExpression.Operator operator,
+			MethodInvocation invocation, AST ast, Expression receiver, Expression rightOperand) {
+		
+		MethodInvocation getInvocation= ast.newMethodInvocation();
+		getInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
+		if (receiver != null) {
+			getInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver)); 
+		}
+		List<Expression> setArguments= invocation.arguments();
+		InfixExpression setInfixExpression= ast.newInfixExpression();
+		
+		setInfixExpression.setOperator(operator);
+		setInfixExpression.setLeftOperand(getInvocation);
+		setInfixExpression.setRightOperand((Expression) ASTNode.copySubtree(ast, rightOperand));
+		setArguments.add(setInfixExpression);
+		ExpressionStatement setInvocationStatement= ast.newExpressionStatement(invocation);
+		return setInvocationStatement;
 	}
 }

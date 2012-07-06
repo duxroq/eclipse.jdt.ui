@@ -16,6 +16,8 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 
+import org.eclipse.jdt.internal.corext.refactoring.Checks;
+import org.eclipse.jdt.internal.corext.refactoring.RefactoringAvailabilityTester;
 import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 
 public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
@@ -56,7 +58,10 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		
 		initializePreferences();
 
-		ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(field);
+		ConvertToAtomicIntegerRefactoring refactoring= //new ConvertToAtomicIntegerRefactoring(field);
+				((Checks.checkAvailability(field).hasFatalError() ||
+						!RefactoringAvailabilityTester.isConvertAtomicIntegerAvailable(field))
+						? null : new ConvertToAtomicIntegerRefactoring(field));
 		performTest(unit, refactoring, COMPARE_WITH_OUTPUT, getProofedContent(outputFolder, id), true);
 	}
 
@@ -237,11 +242,6 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	
 	public void testReturnAssignment() throws Exception {
 		objectTest("i");  //$NON-NLS-1$
-	}
-	
-	public void testMultipleFields() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
-		objectTest("g"); //$NON-NLS-1$
 	}
 	
 	//------------------------- Cases below do meet preconditions - however should throw a warning

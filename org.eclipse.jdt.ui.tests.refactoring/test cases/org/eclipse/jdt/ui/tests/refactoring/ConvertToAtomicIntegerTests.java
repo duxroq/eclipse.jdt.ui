@@ -1,19 +1,22 @@
+
 package org.eclipse.jdt.ui.tests.refactoring;
 
 import java.util.Hashtable;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
+
+import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.ui.tests.refactoring.AbstractSelectionTestCase;
-import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+
+import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 
 public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 
@@ -236,6 +239,11 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("i");  //$NON-NLS-1$
 	}
 	
+	public void testMultipleFields() throws Exception {
+		objectTest("f"); //$NON-NLS-1$
+		objectTest("g"); //$NON-NLS-1$
+	}
+	
 	//------------------------- Cases below do meet preconditions - however should throw a warning
 	
 	public void testWarningDueToMultiplication() throws Exception {
@@ -275,10 +283,5 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 	
 	//------------------------- Cases below do not meet preconditions - therefore refactoring should not proceed
-	
-//	public void testMultipleFields() throws Exception {
-//		objectTest("f");
-//		objectTest("g");
-//	}
 	
 }

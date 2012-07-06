@@ -133,21 +133,17 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			invocation.setName(ast.newSimpleName("set")); //$NON-NLS-1$
 			Expression receiver= getReceiver(lhs);
 			if (receiver != null) {
-				// VIP!! Here we use node.coySubtree because the expresion/arguments might be overriden by the later code.
+				// VIP!! Here we use node.coySubtree because the expression/arguments might be overriden by the later code.
 				// If they are overriden later, using rewriter.createCopyTarget() will result in an orphan CopySourceEdit
 				// without a matching CoypTargetEdit. This would lead later to a MalformedTreeException
 				invocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver)); 
 			}
 			List<Expression> arguments= invocation.arguments();
-			// VIP!! Here we use node.coySubtree because the expresion/arguments might be overriden by the later code.
-			// If they are overriden later, using rewriter.createCopyTarget() will result in an orphan CopySourceEdit
-			// without a matching CoypTargetEdit. This would lead later to a MalformedTreeException
 			Expression copyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
 			
 			if (node.getOperator() == Assignment.Operator.ASSIGN) {
 					
 				Expression rightHandSide= node.getRightHandSide();
-				
 				if (rightHandSide instanceof InfixExpression) {
 					
 					InfixExpression infixExpression= (InfixExpression) rightHandSide;
@@ -185,12 +181,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (node.getOperator() != Assignment.Operator.ASSIGN) {
 				if (node.getOperator() == Assignment.Operator.PLUS_ASSIGN) {
 					arguments.add(copyRHS);
-					// This is the compound assignment case: field+= 10;=>
-					// field.addAndGet(10);
+					// This is the compound assignment case: field+= 10;=>field.addAndGet(10);
 					invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
 				} else if (node.getOperator() == Assignment.Operator.MINUS_ASSIGN) {
-					// This is the compound assignment case: field -= 10;=>
-					// field.addAndGet(-10);
+					// This is the compound assignment case: field -= 10;=>field.addAndGet(-10);
 					invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
 					PrefixExpression negativeExpression= createNegativeExpression(node.getRightHandSide());
 					arguments.add(negativeExpression);
@@ -236,12 +230,13 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private boolean checkSynchronizedMethodForReturnStatement(Assignment node) {
 
 		MethodDeclaration methodDecl= (MethodDeclaration) getParent(node, MethodDeclaration.class);
-//		MethodDeclaration outerMethod= (MethodDeclaration) getParent(methodDecl, MethodDeclaration.class);
 		TypeDeclaration typeDeclaration= (TypeDeclaration) getParent(methodDecl, TypeDeclaration.class);
+//		MethodDeclaration outerMethod= (MethodDeclaration) getParent(methodDecl, MethodDeclaration.class);
 		
 		int modifiers= methodDecl.getModifiers();
 
 		if (Modifier.isSynchronized(modifiers)) {
+			// TODO tackle corner case where a synchronzed method is within another method
 //			if (outerMethod != null) {
 //				Block outerMethodBody= outerMethod.getBody();
 //				String todoComment= new String("// TODO The statements in the method below are not properly synchronized."); //$NON-NLS-1$
@@ -598,7 +593,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private ListRewrite insertLineCommentBeforeNode(String comment, ASTNode body, ASTNode node, ChildListPropertyDescriptor descriptor) {
 		
 		LineComment lineComment= (LineComment) fRewriter.createStringPlaceholder(comment, ASTNode.LINE_COMMENT);
-		ListRewrite rewriter= fRewriter.getListRewrite(body, Block.STATEMENTS_PROPERTY);
+		ListRewrite rewriter= fRewriter.getListRewrite(body, descriptor);
 		rewriter.insertBefore(lineComment, node, createGroupDescription(COMMENT));
 		return rewriter;
 	}
@@ -632,14 +627,18 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		rewriter.replace(statement, returnStatement, createGroupDescription(READ_ACCESS));
 		
 		if (checkSynchronizedBlockForReturnStatement(node)) {
-			createErrorStatus("Synchronized block contains a return statement with an assigment.  " + //$NON-NLS-1$
+			createWarningStatus("Synchronized block contains a return statement with an assigment.  " + //$NON-NLS-1$
 					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
 		} else if (checkSynchronizedMethodForReturnStatement(node)) {
-			createErrorStatus("Synchronized method contains a return statement with an assigment.  " + //$NON-NLS-1$
+			createWarningStatus("Synchronized method contains a return statement with an assigment.  " + //$NON-NLS-1$
 					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
 		}
 	}
 	
+	private void createWarningStatus(String message) {
+		fStatus.addWarning(message);
+	}
+
 	private Statement refactorUnsafeArithmeticOperations(ASTNode node, InfixExpression.Operator operator,
 			MethodInvocation invocation, AST ast, Expression receiver, Expression rightOperand) {
 		

@@ -20,7 +20,7 @@ public class ConvertToAtomicIntegerWizard extends RefactoringWizard {
 
 	@Override
 	protected void addUserInputPages() {
-	
+		
 		addPage(new ConvertToAtomicIntegerInputPage(ConcurrencyRefactorings.AtomicIntegerWizard_name));
 	}
 

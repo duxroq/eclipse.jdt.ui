@@ -8,7 +8,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -25,7 +24,6 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 
 	Text fNameField;
 	private Button initializeDeclarationButton;
-	//Combo fTypeCombo;
 
 	public ConvertToAtomicIntegerInputPage(String name) {
 		super(name);
@@ -76,8 +74,6 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 			
 		});
 
-//		fNameField.setFocus();
-//		fNameField.selectAll();
 		handleInputChanged();
 	}
 
@@ -87,15 +83,6 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 		
 		field.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		return field;
-	}
-
-	private Combo createTypeCombo(Composite composite) {
-		
-		Combo combo= new Combo(composite, SWT.SINGLE | SWT.BORDER);
-		
-		combo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		combo.setVisibleItemCount(4);
-		return combo;
 	}
 
 	private ConvertToAtomicIntegerRefactoring getConvertToAtomicIntegerRefactoring() {

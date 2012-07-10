@@ -131,7 +131,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		ICompilationUnit owner= fField.getCompilationUnit();
 		
 		fImportRewrite= CodeStyleConfiguration.createImportRewrite(fRoot, true);
-		//fImportRewrite= StubUtility.createImportRewrite(fRoot, true);
 		
 		for (int i= 0; i < affectedCUs.length; i++) {
 			ICompilationUnit unit= affectedCUs[i];
@@ -152,7 +151,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 				importRewrite= StubUtility.createImportRewrite(root, true);
 			}
 			checkCompileErrors(result, root, unit);
-			AccessAnalyzerForAtomicInteger analyzer= new AccessAnalyzerForAtomicInteger(this, unit, fieldIdentifier, declaringClass, rewriter, importRewrite);
+			AccessAnalyzerForAtomicInteger analyzer= new AccessAnalyzerForAtomicInteger(this, fieldIdentifier, rewriter, importRewrite);
 			root.accept(analyzer);
 			result.merge(analyzer.getStatus());
 			if (result.hasFatalError()) {
@@ -337,6 +336,21 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 			JavaPlugin.log(exception);
 		}
 
+		final AtomicIntegerRefactoringDescriptor descriptor= makeRefactoringRecordable(project, flags, declaring);
+		
+		final DynamicValidationRefactoringChange result= new DynamicValidationRefactoringChange(descriptor, getName());
+		TextChange[] changes= fChangeManager.getAllChanges();
+		pm.beginTask(NO_NAME, changes.length);
+		pm.setTaskName(ConcurrencyRefactorings.AtomicIntegerRefactoring_create_changes);
+		for (int i= 0; i < changes.length; i++) {
+			result.add(changes[i]);
+			pm.worked(1);
+		}
+		pm.done();
+		return result;
+	}
+
+	private AtomicIntegerRefactoringDescriptor makeRefactoringRecordable(String project, int flags, final IType declaring) {
 		final HashMap<String, String> arguments= new HashMap<String, String>();
 		String description= ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
 		final JDTRefactoringDescriptorComment comment= new JDTRefactoringDescriptorComment(project, this,
@@ -350,17 +364,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, fField.getElementName());
-		
-		final DynamicValidationRefactoringChange result= new DynamicValidationRefactoringChange(descriptor, getName());
-		TextChange[] changes= fChangeManager.getAllChanges();
-		pm.beginTask(NO_NAME, changes.length);
-		pm.setTaskName(ConcurrencyRefactorings.AtomicIntegerRefactoring_create_changes);
-		for (int i= 0; i < changes.length; i++) {
-			result.add(changes[i]);
-			pm.worked(1);
-		}
-		pm.done();
-		return result;
+		return descriptor;
 	}
 
 	@Override

@@ -143,6 +143,9 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	// Basic Object Test
 	//=====================================================================================
 	
+	public void testMultipleFieldRefsInEnclosingStatementSynchBlock() throws Exception {
+		objectTest("i"); //$NON-NLS-1$
+	}
 
 	public void testReadAccess() throws Exception {
 		objectTest("field"); //$NON-NLS-1$
@@ -200,6 +203,10 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("f"); //$NON-NLS-1$
 	}
 	
+	public void testAddAssign() throws Exception {
+		objectTest("f"); //$NON-NLS-1$
+	}
+	
 	public void testSubtract() throws Exception {
 		objectTest("f"); //$NON-NLS-1$
 	}
@@ -241,6 +248,10 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 	
 	public void testReturnAssignment() throws Exception {
+		objectTest("i");  //$NON-NLS-1$
+	}
+
+	public void testAddingInReverse() throws Exception {
 		objectTest("i");  //$NON-NLS-1$
 	}
 	

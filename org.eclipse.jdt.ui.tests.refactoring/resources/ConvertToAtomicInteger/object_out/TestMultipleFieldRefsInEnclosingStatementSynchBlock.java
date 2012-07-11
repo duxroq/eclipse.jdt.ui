@@ -12,5 +12,4 @@ public class TestMultipleFieldRefsInEnclosingStatementSynchBlock {
 			i.set(f++);
 		}
 	}
-	
 }

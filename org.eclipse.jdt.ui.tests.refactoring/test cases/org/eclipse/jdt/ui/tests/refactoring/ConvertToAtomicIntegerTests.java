@@ -175,6 +175,14 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("f"); //$NON-NLS-1$
 	}
 	
+	public void testMultipleInfixExpressionsAssignment() throws Exception {
+		objectTest("f"); //$NON-NLS-1$
+	}
+	
+	public void testMultipleInfixExpressionsAssignmentInSynchBlock() throws Exception {
+		objectTest("f"); //$NON-NLS-1$
+	}
+	
 	public void testRemoveSynchronizedBlockIncrement() throws Exception {
 		objectTest("f"); //$NON-NLS-1$
 	}

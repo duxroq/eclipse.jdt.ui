@@ -2647,7 +2647,7 @@
                label="Convert to AtomicInteger"
                retarget="true"
                menubarPath="org.eclipse.jdt.ui.refactoring.menu/concurrencyGroup"
-               id="org.eclipse.jdt.ui.actions.AtomicInteger">
+               id="org.eclipse.jdt.ui.actions.ConvertToAtomicInteger">
          </action>
 
 <!-- script group  -->

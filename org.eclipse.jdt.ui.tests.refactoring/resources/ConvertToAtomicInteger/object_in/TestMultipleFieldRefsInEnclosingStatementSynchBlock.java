@@ -7,7 +7,7 @@ public class TestMultipleFieldRefsInEnclosingStatementSynchBlock {
 	
 	public void foo() {
 		synchronized (this) {
-			i = f++;	
+			i = f++;
 		}
 	}
 }

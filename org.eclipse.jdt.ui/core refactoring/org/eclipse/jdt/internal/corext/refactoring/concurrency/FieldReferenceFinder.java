@@ -52,18 +52,6 @@ public class FieldReferenceFinder extends ASTVisitor {
 		return true;
 	}
 	
-//	/*
-//	 * An enclosing statement should be checked for side effects
-//	 */
-//	public boolean visit(Statement statement){
-//		if (statement == enclosingStatement) {
-//	
-//		} else {
-//			
-//		}
-//		return true;
-//	}
-	
 	private IBinding resolveBinding(Expression expression) {
 		
 		if (expression instanceof SimpleName) {

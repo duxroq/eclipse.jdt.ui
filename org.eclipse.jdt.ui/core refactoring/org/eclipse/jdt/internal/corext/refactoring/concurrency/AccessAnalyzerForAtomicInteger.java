@@ -64,6 +64,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private List<TextEditGroup> fGroupDescriptions;
 	private boolean fIsFieldFinal;
 	private RefactoringStatus fStatus;
+	private SideEffectsFinderAtomicInteger sideEffectsFinder;
 
 	public AccessAnalyzerForAtomicInteger(
 			ConvertToAtomicIntegerRefactoring refactoring, 
@@ -74,6 +75,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		fRewriter= rewriter;
 		fImportRewriter= importRewrite;
 		fGroupDescriptions= new ArrayList<TextEditGroup>();
+		sideEffectsFinder= new SideEffectsFinderAtomicInteger(fFieldBinding, fStatus, fRewriter, fGroupDescriptions);
 		try {
 			fIsFieldFinal= Flags.isFinal(refactoring.getField().getFlags());
 		} catch (JavaModelException e) {
@@ -136,10 +138,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			Expression copyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
 			
 			if (node.getOperator() == Assignment.Operator.ASSIGN) {
-					
 				Expression rightHandSide= node.getRightHandSide();
-				if (rightHandSide instanceof InfixExpression) {
-					
+				if (rightHandSide instanceof InfixExpression) {		
 					needToVisitRHS= infixExpressionHandler(node, needToVisitRHS, ast, invocation, receiver, arguments, rightHandSide);
 				}		
 				if (needToVisitRHS) {
@@ -163,8 +163,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			MethodInvocation invocation, Expression receiver, List<Expression> arguments, Expression copyRHS) {
 		
 		boolean needToVisitRHS;
-//		InfixExpression.Operator operatorFromAssignmentOperator= getOperatorFromAssignmentOperator(node.getOperator());
-//		needToVisitRHS= refactorInfixOperators(node, ast, invocation, receiver, arguments, copyRHS, operatorFromAssignmentOperator);
 		needToVisitRHS= refactorInfixOperators(node, ast, invocation, receiver, arguments, copyRHS, node.getOperator());
 		
 		return needToVisitRHS;
@@ -350,9 +348,12 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				checkMoreThanOneFieldReference(node, syncBody);
 			} else {
 				Statement statement= (Statement) syncBodyStatements.get(0);
-				if (!isReturnStatementWithIntField(statement)/* && side effects finder does not report there are side effects in the enclosing statement*/) {
-					ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
+				statement.accept(sideEffectsFinder);
+				ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
+				if (!isReturnStatementWithIntField(statement) && !sideEffectsFinder.hasSideEffects()) {
 					fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
+				} else if (sideEffectsFinder.hasSideEffects()) {
+					fRewriter.replace(statement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
 				}
 			}
 			return true;
@@ -378,6 +379,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 		return false;
 	}
+	
 	private void checkMoreThanOneFieldReference(ASTNode node, Block syncBody) {
 		
 		ASTNode enclosingStatement= ASTNodes.getParent(node, Statement.class);
@@ -386,12 +388,15 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		
 		for (Iterator<?> iterator= statements.iterator(); iterator.hasNext();) {
 			Statement statement= (Statement) iterator.next();
-//			if (!statement.equals(enclosingStatement)){
+			if (!statement.equals(enclosingStatement)){
 				statement.accept(new FieldReferenceFinder((Statement) enclosingStatement, fFieldBinding, fStatus));
-//			} else if (statement.equals(enclosingStatement)) {
-//				// TODO else check enclosingStatement for other fields and method calls/side effects
-//				statement.accept(new SideEffectsFinderAtomicInteger(statement, fFieldBinding, fStatus));
-//			}
+			} else {
+				statement.accept(sideEffectsFinder);
+				if (sideEffectsFinder.hasSideEffects()) {
+					// TODO ?? what to do
+					
+				}
+			}
 			insertTodoComments(syncBody, numEntries, statement);	
 		}
 //		if (numEntries < (fStatus.getEntries().length + 1)) {
@@ -422,16 +427,18 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			List<Statement> methodBodyStatements= methodDecl.getBody().statements();
 			Statement statement= methodBodyStatements.get(0);
 			if (methodBodyStatements.size() == 1) {
-				// TODO make sure that one statement does not have other side effects
-				// use ASTVisitor SideEffectsFinder
-				if (!isReturnStatementWithIntField(statement)) {
+				statement.accept(sideEffectsFinder);
+				if (!isReturnStatementWithIntField(statement) && !sideEffectsFinder.hasSideEffects()) {
 					removeSynchronizedModifier(methodDecl, modifiers);
 				}
+			} else {
+				// TODO what's going on here??
+				if (!isReturnStatementWithIntField(statement)) {
+					checkMoreThanOneFieldReference(node, methodDecl.getBody());
+				}
 			}
-			if (!isReturnStatementWithIntField(statement)) {
-				checkMoreThanOneFieldReference(node, methodDecl.getBody());
-				fRewriter.replace(node, invocation, createGroupDescription(accessType));
-			}
+			// TODO what is this??
+			fRewriter.replace(node, invocation, createGroupDescription(accessType));
 			return true;
 		}
 		return false;

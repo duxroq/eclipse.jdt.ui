@@ -335,8 +335,20 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		} catch (JavaModelException exception) {
 			JavaPlugin.log(exception);
 		}
+		final HashMap<String, String> arguments= new HashMap<String, String>();
+		String description= ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
+		final JDTRefactoringDescriptorComment comment= new JDTRefactoringDescriptorComment(project, this,
+				Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_descriptor_description,
+				new String[] { JavaElementLabels.getTextLabel(fField, JavaElementLabels.ALL_FULLY_QUALIFIED), 
+						JavaElementLabels.getTextLabel(declaring, JavaElementLabels.ALL_FULLY_QUALIFIED)}));
+		comment.addSetting(Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_field_pattern,
+				BasicElementLabels.getJavaElementName(fField.getElementName())));
+		
+		final AtomicIntegerRefactoringDescriptor descriptor1= RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);
+		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
+		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, fField.getElementName());
 
-		final AtomicIntegerRefactoringDescriptor descriptor= makeRefactoringRecordable(project, flags, declaring);
+		final AtomicIntegerRefactoringDescriptor descriptor= descriptor1;
 		
 		final DynamicValidationRefactoringChange result= new DynamicValidationRefactoringChange(descriptor, getName());
 		TextChange[] changes= fChangeManager.getAllChanges();
@@ -361,7 +373,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 				BasicElementLabels.getJavaElementName(fField.getElementName())));
 		
 		final AtomicIntegerRefactoringDescriptor descriptor= RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);
-		
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, fField.getElementName());
 		return descriptor;

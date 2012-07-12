@@ -10,8 +10,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.refactoring.descriptors;
 
-import java.util.HashMap;
 import java.util.Map;
+
+import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
 
 import org.eclipse.jdt.core.refactoring.descriptors.AtomicIntegerRefactoringDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.ChangeMethodSignatureDescriptor;
@@ -284,8 +285,12 @@ public class RefactoringSignatureDescriptorFactory {
 		return new UseSupertypeDescriptor(project, description, comment, arguments, flags);
 	}
 
-	public static AtomicIntegerRefactoringDescriptor createAtomicIntegerRefactoringDescriptor(String project, String description, String comment, HashMap arguments, int flags) {
+	public static AtomicIntegerRefactoringDescriptor createAtomicIntegerRefactoringDescriptor(String project, String description, String comment, Map arguments, int flags) {
 		return new AtomicIntegerRefactoringDescriptor(project, description, comment, arguments, flags);
+	}
+
+	public static RefactoringDescriptor createAtomicIntegerRefactoringDescriptor() {
+		return new AtomicIntegerRefactoringDescriptor();
 	}
 
 }

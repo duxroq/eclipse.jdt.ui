@@ -2,10 +2,17 @@ package org.eclipse.jdt.internal.corext.refactoring.scripting;
 
 import java.util.Map;
 
-import org.eclipse.ltk.core.refactoring.RefactoringContribution;
-import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
+import org.eclipse.core.runtime.CoreException;
 
-public class AtomicIntegerRefactoringContribution extends RefactoringContribution {
+import org.eclipse.ltk.core.refactoring.Refactoring;
+import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
+import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+
+import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor;
+
+import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
+
+public class AtomicIntegerRefactoringContribution extends JavaUIRefactoringContribution {
 
 	public AtomicIntegerRefactoringContribution() {
 		// TODO Auto-generated constructor stub
@@ -13,7 +20,19 @@ public class AtomicIntegerRefactoringContribution extends RefactoringContributio
 
 	@Override
 	public RefactoringDescriptor createDescriptor(String id, String project, String description, String comment, Map arguments, int flags) throws IllegalArgumentException {
-		// TODO Auto-generated method stub
+		return RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment, arguments, flags);
+	}
+	
+	@Override
+	public RefactoringDescriptor createDescriptor() {
+		return RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor();
+	}
+
+	@Override
+	public Refactoring createRefactoring(JavaRefactoringDescriptor descriptor, RefactoringStatus status) throws CoreException {
+//		ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(null);
+//		status.merge(refactoring.initialize(new JavaRefactoringArguments(descriptor.getProject(), retrieveArgumentMap(descriptor))));
+//		return refactoring;
 		return null;
 	}
 

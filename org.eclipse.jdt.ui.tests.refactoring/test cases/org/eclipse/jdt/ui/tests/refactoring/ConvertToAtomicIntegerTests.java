@@ -143,6 +143,10 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	// Basic Object Test
 	//=====================================================================================
 	
+	public void testDemo() throws Exception {
+		objectTest("counter");
+	}
+	
 	public void testMultipleFieldRefsInEnclosingStatementSynchBlock() throws Exception {
 		objectTest("i"); //$NON-NLS-1$
 	}

@@ -95,14 +95,16 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	@Override
 	public boolean visit(SimpleName node) {
 	
-		Expression invocation= null;
+		AST ast= node.getAST();
 		
 		if ((!node.isDeclaration()) && (considerBinding(resolveBinding(node)))) {
-			invocation= (MethodInvocation) fRewriter.createStringPlaceholder(
-					fFieldBinding.getName() + ".get()", ASTNode.METHOD_INVOCATION); //$NON-NLS-1$
-			if (!(changeSynchronizedBlock(node, invocation, READ_ACCESS) || 
-					changeSynchronizedMethod(node, invocation, READ_ACCESS))) {
-				fRewriter.replace(node, invocation, createGroupDescription(READ_ACCESS));
+			MethodInvocation invocationGet= ast.newMethodInvocation();
+			invocationGet.setExpression((Expression) ASTNode.copySubtree(ast, node));
+			invocationGet.setName(ast.newSimpleName("get")); //$NON-NLS-1$
+			
+			if (!(changeSynchronizedBlock(node, invocationGet, READ_ACCESS) || 
+					changeSynchronizedMethod(node, invocationGet, READ_ACCESS))) {
+				fRewriter.replace(node, invocationGet, createGroupDescription(READ_ACCESS));
 			}
 		}
 		return true;
@@ -156,10 +158,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				fRewriter.replace(node, invocation, createGroupDescription(WRITE_ACCESS));
 			}
 		}	
-//		if (needToVisitRHS) {
-//			//node.getRightHandSide().accept(this);
-//			node.getRightHandSide().accept(new StatementVisitor());
-//		}	
+		if (needToVisitRHS) {
+			node.getRightHandSide().accept(this);
+			//node.getRightHandSide().accept(new StatementVisitor());
+		}	
 		return false;
 	}
 
@@ -179,62 +181,53 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		InfixExpression infixExpression= (InfixExpression) rightHandSide;
 		Expression leftOperand= infixExpression.getLeftOperand();
 		Expression rightOperand= infixExpression.getRightOperand();
+		Expression newleftOperand= leftOperand;
+		Expression newRightOperand= rightOperand;
 
 		Operator operator= infixExpression.getOperator();
 		
 		boolean foundFieldToBeRefactoredInInfix= false;
 		boolean leftOperandIsChosenField= considerBinding(resolveBinding(leftOperand));
 		boolean rightOperandIsChosenField= considerBinding(resolveBinding(rightOperand));
-		ArrayList<Expression> operands= new ArrayList<Expression>();
-		
-		// TODO fix this logic
 		
 		if (leftOperandIsChosenField || rightOperandIsChosenField) {
 			if (leftOperandIsChosenField) {
-				// TODO illegal argument exception
-				infixExpression.setLeftOperand((Expression) ASTNode.copySubtree(ast, infixExpression.getRightOperand()));
+				newleftOperand= (Expression) ASTNode.copySubtree(ast, infixExpression.getRightOperand());
 				if (infixExpression.hasExtendedOperands()) {
-					infixExpression.setRightOperand((Expression) infixExpression.extendedOperands().remove(0));
-					if (considerBinding(resolveBinding(infixExpression.getRightOperand()))) {
-						MethodInvocation methodInvocation= getMethodInvocationGet(ast, infixExpression.getRightOperand());
+					newRightOperand= (Expression) infixExpression.extendedOperands().remove(0);
+					if (considerBinding(resolveBinding(newRightOperand))) {
+						MethodInvocation methodInvocation= getMethodInvocationGet(ast, newRightOperand);
 						infixExpression.setRightOperand(methodInvocation);
 					}
 				} else {
 					// refactoring for only 1 argument
-					refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, infixExpression.getLeftOperand(), operator);
+					refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, newleftOperand, operator);
 					needToVisitRHS= false;
 					return needToVisitRHS;
 				}
-				if (considerBinding(resolveBinding(infixExpression.getLeftOperand()))) {
-					MethodInvocation methodInvocation= getMethodInvocationGet(ast, infixExpression.getLeftOperand());
+				if (considerBinding(resolveBinding(newleftOperand))) {
+					MethodInvocation methodInvocation= getMethodInvocationGet(ast, newleftOperand);
 					infixExpression.setLeftOperand(methodInvocation);
 				}
 			} else if (rightOperandIsChosenField) {
 				if (infixExpression.hasExtendedOperands()) {
-					infixExpression.setRightOperand((Expression) infixExpression.extendedOperands().remove(0));
-					if (considerBinding(resolveBinding(infixExpression.getRightOperand()))) {
-						MethodInvocation methodInvocation= getMethodInvocationGet(ast, infixExpression.getRightOperand());
+					newRightOperand= (Expression) infixExpression.extendedOperands().remove(0);
+					if (considerBinding(resolveBinding(newRightOperand))) {
+						MethodInvocation methodInvocation= getMethodInvocationGet(ast, newRightOperand);
 						infixExpression.setRightOperand(methodInvocation);
 					}
 				} else {
 					// there needs be be a refactoring into addAndGet for 1 argument
-					refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, leftOperand, operator);
+					refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, newleftOperand, operator);
 					needToVisitRHS= false;
 					return needToVisitRHS;
 				}
 			}
-			// convert all is to i.get() in extended operands--> extract to a method TODO
-			if (infixExpression.hasExtendedOperands()) {
-				List<Expression> extendedOperands= infixExpression.extendedOperands();
-				for (Iterator iterator= extendedOperands.iterator(); iterator.hasNext();) {
-					Expression expression= (Expression) iterator.next();
-					if (considerBinding(resolveBinding(expression))) {
-						MethodInvocation methodInvocation= getMethodInvocationGet(ast, expression);
-						expression= methodInvocation;
-					}
-
-				}
+			if (newleftOperand != leftOperand) {
+				infixExpression.setLeftOperand(newleftOperand);
 			}
+			infixExpression.setRightOperand(newRightOperand);
+			changeFieldReferencesInExtendedOperandsToGetInvocations(ast, infixExpression);
 			foundFieldToBeRefactoredInInfix= true;
 			refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, infixExpression, operator);
 			needToVisitRHS= false;
@@ -247,22 +240,29 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				needToVisitRHS= true;
 			}
 		} else {
-			// TODO fixxxx
-//			operands.add(rightOperand);
-//			operands.add(leftOperand);
-//			//refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, operands, operator);
-//			needToVisitRHS= false;
-			// this is not an add and get.  this is a set.
 			needToVisitRHS= true;
 		}
 		
 		return needToVisitRHS;
 	}
+
+	private void changeFieldReferencesInExtendedOperandsToGetInvocations(AST ast, InfixExpression infixExpression) {
+		if (infixExpression.hasExtendedOperands()) {
+			List<Expression> extendedOperands= infixExpression.extendedOperands();
+			for (Iterator<Expression> iterator= extendedOperands.iterator(); iterator.hasNext();) {
+				Expression expression= iterator.next();
+				if (considerBinding(resolveBinding(expression))) {
+					MethodInvocation methodInvocation= getMethodInvocationGet(ast, expression);
+					expression= methodInvocation;
+				}
+			}
+		}
+	}
 	
 	private MethodInvocation getMethodInvocationGet(AST ast, Expression expression) {
 		MethodInvocation methodInvocation= ast.newMethodInvocation();
 		methodInvocation.setExpression(expression);
-		methodInvocation.setName(ast.newSimpleName("get"));
+		methodInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
 		return methodInvocation;
 	}
 
@@ -475,11 +475,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				checkMoreThanOneFieldReference(node, syncBody);
 			} else {
 				Statement statement= (Statement) syncBodyStatements.get(0);
-				statement.accept(sideEffectsFinder);
 				ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
-				if (!isReturnStatementWithIntField(statement) && !sideEffectsFinder.hasSideEffects()) {
+				if (!isReturnStatementWithIntField(statement) && !sideEffectsFinder.hasSideEffects(statement)) {
 					fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
-				} else if (sideEffectsFinder.hasSideEffects()) {
+				} else if (sideEffectsFinder.hasSideEffects(statement)) {
 					fRewriter.replace(statement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
 				}
 			}
@@ -518,8 +517,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (!statement.equals(enclosingStatement)){
 				statement.accept(new FieldReferenceFinderAtomicInteger((Statement) enclosingStatement, fFieldBinding, fStatus));
 			} else {
-				statement.accept(sideEffectsFinder);
-				if (sideEffectsFinder.hasSideEffects()) {
+				if (sideEffectsFinder.hasSideEffects(statement)) {
 					createWarningStatus("Synchronized block contains side effects. Consider using locks instead."); //$NON-NLS-1$
 				}
 			}
@@ -553,8 +551,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			List<Statement> methodBodyStatements= methodDecl.getBody().statements();
 			Statement statement= methodBodyStatements.get(0);
 			if (methodBodyStatements.size() == 1) {
-				statement.accept(sideEffectsFinder);
-				if (!isReturnStatementWithIntField(statement) && !sideEffectsFinder.hasSideEffects()) {
+				//System.out.println("" + statement.toString());
+				if (!isReturnStatementWithIntField(statement) && !sideEffectsFinder.hasSideEffects(statement)) {
 					removeSynchronizedModifier(methodDecl, modifiers);
 				}
 			} else {
@@ -564,6 +562,23 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			}
 			fRewriter.replace(node, invocation, createGroupDescription(accessType));
 			return true;
+		}
+		return false;
+	}
+
+	private boolean statementIsRefactored(Statement statement) {
+		// TODO Auto-generated method stub
+		if (statement instanceof ExpressionStatement) {
+			Expression expression= ((ExpressionStatement) statement).getExpression();
+			if (expression instanceof MethodInvocation) {
+				SimpleName name= ((MethodInvocation) expression).getName();
+				if (name.getFullyQualifiedName().equals("addAndGet") //$NON-NLS-1$
+						|| name.getFullyQualifiedName().equals("getAndIncrement") //$NON-NLS-1$
+						|| name.getFullyQualifiedName().equals("getAndDecrement") //$NON-NLS-1$
+						|| name.getFullyQualifiedName().equals("set")) { //$NON-NLS-1$
+					return true;
+				}
+			}
 		}
 		return false;
 	}

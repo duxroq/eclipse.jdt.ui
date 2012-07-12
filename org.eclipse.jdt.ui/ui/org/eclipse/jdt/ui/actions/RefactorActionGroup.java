@@ -332,9 +332,9 @@ public class RefactorActionGroup extends ActionGroup {
 			initAction(fIntroduceParameterObjectAction, selection, IJavaEditorActionDefinitionIds.INTRODUCE_PARAMETER_OBJECT);
 			editor.setAction("IntroduceParameterObjectAction", fIntroduceParameterObjectAction); //$NON-NLS-1$
 			
-			fAtomicIntegerAction= new ConvertIntToAtomicIntegerAction(editor);
+			fAtomicIntegerAction= new ConvertToAtomicIntegerAction(editor);
 			initAction(fAtomicIntegerAction, selection, IJavaEditorActionDefinitionIds.ATOMIC_INTEGER);
-			editor.setAction("ConvertIntToAtomicInteger", fAtomicIntegerAction); //$NON-NLS-1$
+			editor.setAction("ConvertToAtomicInteger", fAtomicIntegerAction); //$NON-NLS-1$
 		}
 		fIntroduceIndirectionAction= new IntroduceIndirectionAction(editor);
 		initUpdatingAction(fIntroduceIndirectionAction, provider, null, selection, IJavaEditorActionDefinitionIds.INTRODUCE_INDIRECTION);
@@ -420,7 +420,7 @@ public class RefactorActionGroup extends ActionGroup {
 			fConvertAnonymousToNestedAction= new ConvertAnonymousToNestedAction(fSite);
 			initUpdatingAction(fConvertAnonymousToNestedAction, fSelectionProvider, selectionProvider, selection, IJavaEditorActionDefinitionIds.CONVERT_ANONYMOUS_TO_NESTED);
 			
-			fAtomicIntegerAction= new ConvertIntToAtomicIntegerAction(fSite);
+			fAtomicIntegerAction= new ConvertToAtomicIntegerAction(fSite);
 			initUpdatingAction(fAtomicIntegerAction, fSelectionProvider, selectionProvider, selection, IJavaEditorActionDefinitionIds.ATOMIC_INTEGER);
 		}
 		fInlineAction= new InlineAction(fSite);

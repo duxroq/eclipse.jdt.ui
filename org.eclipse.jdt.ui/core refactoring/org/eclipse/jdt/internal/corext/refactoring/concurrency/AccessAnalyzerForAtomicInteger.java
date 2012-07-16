@@ -134,6 +134,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				invocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver)); 
 			}
 			List<Expression> arguments= invocation.arguments();
+			//Expression copyRHS= (Expression) fRewriter.createMoveTarget(node.getRightHandSide());
 			Expression copyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
 			
 			if (node.getOperator() == Assignment.Operator.ASSIGN) {
@@ -144,6 +145,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				// TODO
 				if (needToVisitRHS) {
 					copyRHS.accept(new ChangeFieldToGetInvocationVisitor());
+					//fRewriter.replace(node.getRightHandSide(), copyRHS, null);
 					arguments.add(copyRHS);
 				}
 			}
@@ -178,21 +180,26 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		InfixExpression infixExpression= (InfixExpression) rightHandSide;
 		Expression leftOperand= infixExpression.getLeftOperand();
 		Expression rightOperand= infixExpression.getRightOperand();
-		Expression newLeftOperand= leftOperand;
-		Expression newRightOperand= rightOperand;
-
+		Expression newLeftOperand= (Expression) fRewriter.createMoveTarget(leftOperand);
+		Expression newRightOperand= (Expression) fRewriter.createMoveTarget(rightOperand);
+		
 		Operator operator= infixExpression.getOperator();
 
 		boolean foundFieldToBeRefactoredInInfix= false;
 		boolean leftOperandIsChosenField= considerBinding(resolveBinding(leftOperand));
 		boolean rightOperandIsChosenField= considerBinding(resolveBinding(rightOperand));
-
+		
+		if (infixExpression.hasExtendedOperands()) {
+			((Expression) infixExpression.extendedOperands().get(0)).accept(new ChangeFieldToGetInvocationVisitor());
+		}
 		if (leftOperandIsChosenField || rightOperandIsChosenField) {
 			if (leftOperandIsChosenField) {
-				infixExpression.getRightOperand().accept(new ChangeFieldToGetInvocationVisitor());
 				newLeftOperand= (Expression) ASTNode.copySubtree(ast, infixExpression.getRightOperand());
+				newLeftOperand.accept(new ChangeFieldToGetInvocationVisitor());
 				if (infixExpression.hasExtendedOperands()) {
-					newRightOperand= (Expression) ASTNode.copySubtree(ast, (ASTNode) infixExpression.extendedOperands().remove(0));
+					newRightOperand= (Expression) ASTNode.copySubtree(ast, (ASTNode) infixExpression.extendedOperands().get(0));
+					fRewriter.remove((ASTNode) infixExpression.extendedOperands().get(0), createGroupDescription(READ_ACCESS));
+					infixExpression.extendedOperands().remove(0);
 					newRightOperand.accept(new ChangeFieldToGetInvocationVisitor());
 				} else {
 					refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, newLeftOperand, operator);
@@ -200,43 +207,54 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					return needToVisitRHS;
 				}
 			} else if (rightOperandIsChosenField) {
-				newLeftOperand.accept(new ChangeFieldToGetInvocationVisitor());
+				leftOperand.accept(new ChangeFieldToGetInvocationVisitor());
 				if (infixExpression.hasExtendedOperands()) {
-					newRightOperand= (Expression) ASTNode.copySubtree(ast, (ASTNode) infixExpression.extendedOperands().remove(0));
+					newRightOperand= (Expression) ASTNode.copySubtree(ast, (ASTNode) infixExpression.extendedOperands().get(0));
+					fRewriter.remove((ASTNode) infixExpression.extendedOperands().get(0), null);
+					infixExpression.extendedOperands().remove(0);
 					newRightOperand.accept(new ChangeFieldToGetInvocationVisitor());
+
 				} else {
-					refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, newLeftOperand, operator);
+					refactorIntoAddAndGet(node, ast, invocation, receiver, arguments, leftOperand, operator);
 					needToVisitRHS= false;
 					return needToVisitRHS;
 				}
 			}
-			if (newLeftOperand != leftOperand) {
-				infixExpression.setLeftOperand(newLeftOperand);
-			}
+			
+			fRewriter.replace(leftOperand, newLeftOperand, createGroupDescription(READ_ACCESS));
+			fRewriter.replace(rightOperand, newRightOperand, createGroupDescription(READ_ACCESS));
+			
+			infixExpression.setLeftOperand(newLeftOperand);
 			infixExpression.setRightOperand(newRightOperand);
+			
 			System.out.println("The infix expression being added to change all the field refs in the ext.ops is : " + infixExpression.toString()); //$NON-NLS-1$
 			changeFieldReferencesInExtendedOperandsToGetInvocations(infixExpression);
-			refactorIntoAddAndGet(node, invocation, infixExpression, operator);
-			needToVisitRHS= false;
+			needToVisitRHS= refactorIntoAddAndGet(node, invocation, infixExpression, operator);
 		} else if (infixExpression.hasExtendedOperands()) {
 			infixExpression.getLeftOperand().accept(new ChangeFieldToGetInvocationVisitor());
 			infixExpression.getRightOperand().accept(new ChangeFieldToGetInvocationVisitor());
-			foundFieldToBeRefactoredInInfix= extendedOperandsHandler(infixExpression);
+			foundFieldToBeRefactoredInInfix= findFieldInExtendedOperands(infixExpression);
 			// TODO problem?
 			if (foundFieldToBeRefactoredInInfix) {
-				refactorIntoAddAndGet(node, invocation, infixExpression, operator);
-				needToVisitRHS= false;
+				needToVisitRHS= refactorIntoAddAndGet(node, invocation, infixExpression, operator);
 			} else {
 				changeFieldReferencesInExtendedOperandsToGetInvocations(infixExpression);
 				needToVisitRHS= true;
 			}
 		} else {
+			infixExpression.getLeftOperand().accept(new ChangeFieldToGetInvocationVisitor());
+			infixExpression.getRightOperand().accept(new ChangeFieldToGetInvocationVisitor());
+
+			changeFieldReferencesInExtendedOperandsToGetInvocations(infixExpression);
+			System.out.println("The invocation looks like: " + infixExpression.toString()); //$NON-NLS-1$
 			needToVisitRHS= true;
 		}
 		return needToVisitRHS;
 	}
 
 	private void changeFieldReferencesInExtendedOperandsToGetInvocations(InfixExpression infixExpression) {
+		//infixExpression.getLeftOperand().accept(new ChangeFieldToGetInvocationVisitor());
+		//infixExpression.getRightOperand().accept(new ChangeFieldToGetInvocationVisitor());
 		if (infixExpression.hasExtendedOperands()) {
 			List<Expression> extendedOperands= infixExpression.extendedOperands();
 			for (int i= 0; i < extendedOperands.size(); i++) {
@@ -257,7 +275,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return methodInvocation;
 	}
 
-	private boolean extendedOperandsHandler(InfixExpression infixExpression) {
+	private boolean findFieldInExtendedOperands(InfixExpression infixExpression) {
 		
 		List<Expression> extendedOperands= infixExpression.extendedOperands();
 		boolean foundFieldToBeRefactoredInInfix= false;
@@ -272,34 +290,29 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return foundFieldToBeRefactoredInInfix;
 	}
 
-	private void refactorIntoAddAndGet(Assignment node, MethodInvocation invocation, InfixExpression infixExpression, Operator operator) {
+	private boolean refactorIntoAddAndGet(Assignment node, MethodInvocation invocation, InfixExpression infixExpression, Operator operator) {
 		AST ast= invocation.getAST();
+		boolean needToVisitRHS= false;
 		System.out.println("The infix expression I want to add to the arguments is: " + infixExpression.toString());
 		if (operator == InfixExpression.Operator.PLUS) {
 			invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
-			if (infixExpression != null) 
-				invocation.arguments().add(fRewriter.createMoveTarget(infixExpression));
-				//invocation.arguments().add(infixExpression);
+			invocation.arguments().add(fRewriter.createMoveTarget(infixExpression));
+			//invocation.arguments().add(infixExpression);
 		} else if (operator == InfixExpression.Operator.MINUS) {
 			invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
 			// TODO fix subtraction
-			if (infixExpression != null) 
 			invocation.arguments().add(fRewriter.createMoveTarget(infixExpression));
-		} /*else { // TODO other operators
+		} else { // TODO other operators
 			createUnsafeOperatorWarning(node);
-			ASTNode statement= ASTNodes.getParent(node, Statement.class);
-			Block body= (Block) ASTNodes.getParent(node, Block.class);
-			
-//			if (operator instanceof Assignment.Operator) {
-//				operator= getOperatorFromAssignmentOperator((Assignment.Operator) operator);
-//			}
-			Statement setInvocationStatement= refactorUnsafeArithmeticOperations(operator, invocation,
-					ast, receiver, operands);
-			
-			ListRewrite rewriter= insertLineCommentBeforeNode("// TODO The operations below cannot be executed atomically.",  //$NON-NLS-1$
-					body, statement, Block.STATEMENTS_PROPERTY);
-			rewriter.replace(statement, setInvocationStatement, createGroupDescription(READ_AND_WRITE_ACCESS));
-		}*/
+//			ASTNode statement= ASTNodes.getParent(node, Statement.class);
+//			Block body= (Block) ASTNodes.getParent(node, Block.class);
+//
+//			ListRewrite rewriter= insertLineCommentBeforeNode("// TODO The operations below cannot be executed atomically.",  //$NON-NLS-1$
+//					body, statement, Block.STATEMENTS_PROPERTY);
+//			rewriter.replace(statement, setInvocationStatement, createGroupDescription(READ_AND_WRITE_ACCESS));
+			needToVisitRHS= true;
+		}
+		return needToVisitRHS;
 	}
 
 	private void refactorIntoAddAndGet(Assignment node, AST ast, MethodInvocation invocation,
@@ -750,7 +763,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 //				methodInvocation.setExpression(ast.newSimpleName(fFieldBinding.getName()));
 //				methodInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
 				
-				MethodInvocation methodInvocation= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, simpleName));
+				ASTNode methodInvocation= fRewriter.createMoveTarget(simpleName);
+				methodInvocation= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, simpleName));
 				
 				fRewriter.replace(simpleName, methodInvocation, createGroupDescription(READ_ACCESS));
 				System.out.println("Rewriter " + fRewriter.toString()); //$NON-NLS-1$

@@ -27,6 +27,7 @@ import org.eclipse.ltk.core.refactoring.participants.ResourceChangeChecker;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
@@ -50,6 +51,7 @@ import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
 import org.eclipse.jdt.core.refactoring.descriptors.AtomicIntegerRefactoringDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -62,7 +64,9 @@ import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jdt.internal.corext.dom.ModifierRewrite;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
 import org.eclipse.jdt.internal.corext.refactoring.JDTRefactoringDescriptorComment;
+import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringArguments;
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringDescriptorUtil;
+import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringScopeFactory;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringSearchEngine;
 import org.eclipse.jdt.internal.corext.refactoring.base.JavaStatusContext;
@@ -362,22 +366,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		return result;
 	}
 
-	private AtomicIntegerRefactoringDescriptor makeRefactoringRecordable(String project, int flags, final IType declaring) {
-		final HashMap<String, String> arguments= new HashMap<String, String>();
-		String description= ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
-		final JDTRefactoringDescriptorComment comment= new JDTRefactoringDescriptorComment(project, this,
-				Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_descriptor_description,
-				new String[] { JavaElementLabels.getTextLabel(fField, JavaElementLabels.ALL_FULLY_QUALIFIED), 
-						JavaElementLabels.getTextLabel(declaring, JavaElementLabels.ALL_FULLY_QUALIFIED)}));
-		comment.addSetting(Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_field_pattern,
-				BasicElementLabels.getJavaElementName(fField.getElementName())));
-		
-		final AtomicIntegerRefactoringDescriptor descriptor= RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);
-		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
-		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, fField.getElementName());
-		return descriptor;
-	}
-
 	@Override
 	public String getName() {
 		return ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
@@ -433,5 +421,57 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 				return;
 			}
 		}
+	}
+
+	public RefactoringStatus initialize(JavaRefactoringArguments arguments) {
+		// TODO Auto-generated method stub
+		final String handle= arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT);
+		if (handle != null) {
+			final IJavaElement element= JavaRefactoringDescriptorUtil.handleToElement(arguments.getProject(), handle, false);
+			if (element == null || !element.exists() || element.getElementType() != IJavaElement.FIELD)
+				return JavaRefactoringDescriptorUtil.createInputFatalStatus(element, getName(), IJavaRefactorings.ATOMIC_INTEGER);
+			else {
+				fField= (IField) element;
+				try {
+					initialize(fField);
+				} catch (JavaModelException exception) {
+					return JavaRefactoringDescriptorUtil.createInputFatalStatus(element, getName(), IJavaRefactorings.ATOMIC_INTEGER);
+				}
+			}
+		} else
+			return RefactoringStatus.createFatalErrorStatus(Messages.format(RefactoringCoreMessages.InitializableRefactoring_argument_not_exist,
+					JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
+		// TODO uninitialized fields:
+				// fFieldDeclarationFragment
+				// fRoot
+				// fRewriter
+				// fChangeManager
+				// fImportRewrite
+		// TODO whatever this is...
+//		final String matches= arguments.getAttribute(ATTRIBUTE_COMMENTS);
+//		if (matches != null) {
+//			fGenerateJavadoc= Boolean.valueOf(matches).booleanValue();
+//		} else
+//			return RefactoringStatus.createFatalErrorStatus(Messages.format(RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, ATTRIBUTE_COMMENTS));
+		return new RefactoringStatus();
+	}
+
+	private void initialize(IField field) throws JavaModelException {
+		// TODO Auto-generated method stub
+//		fGetterName= GetterSetterUtil.getGetterName(field, null);
+//		fSetterName= GetterSetterUtil.getSetterName(field, null);
+//		String argBaseName= StubUtility.getBaseName(field);
+//		fArgName= StubUtility.suggestArgumentName(field.getJavaProject(), argBaseName, new String[0]);
+//		checkArgName();
+		fField= field;
+		initializeDeclaration= true;
+		
+		// TODO uninitialized fields:
+		// fFieldDeclarationFragment
+		// fRoot
+		// fRewriter
+		// fChangeManager
+		// fImportRewrite
+		
 	}	
 }

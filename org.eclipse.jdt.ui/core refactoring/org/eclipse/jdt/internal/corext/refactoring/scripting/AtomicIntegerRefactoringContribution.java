@@ -11,6 +11,8 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor;
 
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
+import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringArguments;
+import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 
 public class AtomicIntegerRefactoringContribution extends JavaUIRefactoringContribution {
 
@@ -30,10 +32,9 @@ public class AtomicIntegerRefactoringContribution extends JavaUIRefactoringContr
 
 	@Override
 	public Refactoring createRefactoring(JavaRefactoringDescriptor descriptor, RefactoringStatus status) throws CoreException {
-//		ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(null);
-//		status.merge(refactoring.initialize(new JavaRefactoringArguments(descriptor.getProject(), retrieveArgumentMap(descriptor))));
-//		return refactoring;
-		return null;
+		ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(null);
+		status.merge(refactoring.initialize(new JavaRefactoringArguments(descriptor.getProject(), retrieveArgumentMap(descriptor))));
+		return refactoring;
 	}
 
 }

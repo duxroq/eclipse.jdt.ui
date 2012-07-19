@@ -92,7 +92,6 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 		RefactoringStatus status= new RefactoringStatus();
 		ConvertToAtomicIntegerRefactoring refactoring= getConvertToAtomicIntegerRefactoring();
 		
-		// TODO make sure you can rename field
 		status.merge(refactoring.setFieldName(fNameField.getText()));
 		status.merge(refactoring.setInitializeDeclaration(initializeDeclarationButton.getSelection()));
 		

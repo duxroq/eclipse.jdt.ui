@@ -8,6 +8,7 @@ public class TestMultipleInfixExpressionsWithReferenceToChosenField {
 	int a;
 	
 	public void foo() {
+		// TODO The operations below cannot be executed atomically.
 		f.addAndGet(12 + a);
 	}
 }

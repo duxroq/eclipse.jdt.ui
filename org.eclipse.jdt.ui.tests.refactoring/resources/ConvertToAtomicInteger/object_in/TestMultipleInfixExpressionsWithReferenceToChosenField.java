@@ -6,6 +6,6 @@ public class TestMultipleInfixExpressionsWithReferenceToChosenField {
 	int a;
 	
 	public void foo() {
-		f= 12 + a + f;
+		f= 12 + f + a;
 	}
 }

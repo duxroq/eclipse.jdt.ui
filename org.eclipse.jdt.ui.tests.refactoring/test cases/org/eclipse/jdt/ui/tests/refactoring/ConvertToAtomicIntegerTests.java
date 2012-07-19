@@ -147,6 +147,26 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("counter");
 	}
 	
+	public void testInfixExpressions() throws Exception {
+		objectTest("i");
+	}
+	
+	public void testInfixExpressions2() throws Exception {
+		objectTest("i");
+	}
+	
+	public void testInfixExpressions3() throws Exception {
+		objectTest("i");
+	}
+	
+	public void testInfixExpressions4() throws Exception {
+		objectTest("i");
+	}
+	
+	public void testInfixExpressions5() throws Exception {
+		objectTest("i");
+	}
+	
 	public void testMultipleFieldRefsInEnclosingStatementSynchBlock() throws Exception {
 		objectTest("i"); //$NON-NLS-1$
 	}
@@ -157,6 +177,10 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	
 	public void testMultipleInfixExpressionsWithReferenceToChosenField() throws Exception {
 		objectTest("f"); //$NON-NLS-1$
+	}
+	
+	public void testMultipleInfixExpWithMultipleRefsToChosenField() throws Exception {
+		objectTest("i");
 	}
 	
 	public void testReadAccess() throws Exception {

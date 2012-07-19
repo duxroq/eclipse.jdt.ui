@@ -10,6 +10,7 @@ public class TestMultipleInfixExpressionsAssignmentInSynchBlock {
 	
 	public void foo() {
 		synchronized (this) {
+			// TODO The operations below cannot be executed atomically.
 			f.set(12 + a + b);			
 		}
 	}

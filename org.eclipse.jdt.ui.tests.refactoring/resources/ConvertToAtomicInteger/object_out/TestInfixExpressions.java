@@ -2,14 +2,12 @@ package object_out;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TestMultipleInfixExpressionsAssignment {
+public class TestInfixExpressions {
 
-	AtomicInteger f = new AtomicInteger();
-	int a;
-	int b;
+	private AtomicInteger i = new AtomicInteger();
 	
 	public void foo() {
 		// TODO The operations below cannot be executed atomically.
-		f.set(12 + a + b);
+		i.addAndGet(i.get() + i.get());
 	}
 }

@@ -2,14 +2,13 @@ package object_out;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TestMultipleInfixExpressionsAssignmentInSynchMethod {
+public class TestMultipleInfixExpWithMultipleRefsToChosenField {
 
-	AtomicInteger f = new AtomicInteger();
-	int a;
-	int b;
-	
+	AtomicInteger i = new AtomicInteger();
+	int j;
+
 	public synchronized void foo() {
 		// TODO The operations below cannot be executed atomically.
-		f.set(b + 12 + a);
+		i.addAndGet(j + 12 + i.get());
 	}
 }

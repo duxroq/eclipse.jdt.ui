@@ -42,7 +42,6 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.Message;
 import org.eclipse.jdt.core.dom.NodeFinder;
@@ -102,6 +101,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	}
 	
 	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public RefactoringStatus checkFinalConditions(IProgressMonitor pm)
 			throws CoreException, OperationCanceledException {
 		
@@ -129,8 +129,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		IProgressMonitor sub= new SubProgressMonitor(pm, 5);
 		sub.beginTask(ConcurrencyRefactorings.ConcurrencyRefactorings_empty_string, affectedCUs.length);
 		IVariableBinding fieldIdentifier= fFieldDeclarationFragment.resolveBinding();
-		ITypeBinding declaringClass= 
-			((AbstractTypeDeclaration) ASTNodes.getParent(fFieldDeclarationFragment, AbstractTypeDeclaration.class)).resolveBinding();
 		List ownerDescriptions= new ArrayList();
 		ICompilationUnit owner= fField.getCompilationUnit();
 		
@@ -193,7 +191,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		newType= root.getAST().newSimpleType(ASTNodeFactory.newName(root.getAST(), ConcurrencyRefactorings.AtomicIntegerRefactoring_atomic_integer));
 		
 		FieldDeclaration oldFieldDeclaration= (FieldDeclaration) ASTNodes.getParent(fFieldDeclarationFragment, FieldDeclaration.class);
-		ASTNode typeToReplace= oldFieldDeclaration.getType();
 		TextEditGroup gd= new TextEditGroup(ConcurrencyRefactorings.AtomicIntegerRefactoring_change_type);
 		
 		List<?> fragments= oldFieldDeclaration.fragments();
@@ -424,7 +421,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	}
 
 	public RefactoringStatus initialize(JavaRefactoringArguments arguments) {
-		// TODO Auto-generated method stub
+
 		final String handle= arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT);
 		if (handle != null) {
 			final IJavaElement element= JavaRefactoringDescriptorUtil.handleToElement(arguments.getProject(), handle, false);
@@ -432,46 +429,17 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 				return JavaRefactoringDescriptorUtil.createInputFatalStatus(element, getName(), IJavaRefactorings.ATOMIC_INTEGER);
 			else {
 				fField= (IField) element;
-				try {
-					initialize(fField);
-				} catch (JavaModelException exception) {
-					return JavaRefactoringDescriptorUtil.createInputFatalStatus(element, getName(), IJavaRefactorings.ATOMIC_INTEGER);
-				}
+				initialize(fField); 
 			}
-		} else
-			return RefactoringStatus.createFatalErrorStatus(Messages.format(RefactoringCoreMessages.InitializableRefactoring_argument_not_exist,
-					JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
-		// TODO uninitialized fields:
-				// fFieldDeclarationFragment
-				// fRoot
-				// fRewriter
-				// fChangeManager
-				// fImportRewrite
-		// TODO whatever this is...
-//		final String matches= arguments.getAttribute(ATTRIBUTE_COMMENTS);
-//		if (matches != null) {
-//			fGenerateJavadoc= Boolean.valueOf(matches).booleanValue();
-//		} else
-//			return RefactoringStatus.createFatalErrorStatus(Messages.format(RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, ATTRIBUTE_COMMENTS));
+		} else {
+			return RefactoringStatus.createFatalErrorStatus(Messages.format(RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
+		}
 		return new RefactoringStatus();
 	}
 
-	private void initialize(IField field) throws JavaModelException {
-		// TODO Auto-generated method stub
-//		fGetterName= GetterSetterUtil.getGetterName(field, null);
-//		fSetterName= GetterSetterUtil.getSetterName(field, null);
-//		String argBaseName= StubUtility.getBaseName(field);
-//		fArgName= StubUtility.suggestArgumentName(field.getJavaProject(), argBaseName, new String[0]);
-//		checkArgName();
+	private void initialize(IField field) {
+
 		fField= field;
-		initializeDeclaration= true;
-		
-		// TODO uninitialized fields:
-		// fFieldDeclarationFragment
-		// fRoot
-		// fRewriter
-		// fChangeManager
-		// fImportRewrite
-		
+		initializeDeclaration= true;	
 	}	
 }

@@ -151,7 +151,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if ( !(changeSynchronizedBlock(node, invocation, WRITE_ACCESS) || changeSynchronizedMethod(node, invocation, WRITE_ACCESS)) ) {
 				fRewriter.replace(node, invocation, createGroupDescription(WRITE_ACCESS));
 			}
-			System.out.println(fRewriter.toString());
 		}		
 		return false;
 	}
@@ -318,7 +317,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		if (infixExpression.hasExtendedOperands()) {
 			List<Expression> extendedOperands= infixExpression.extendedOperands();
 			for (int i= 0; i < extendedOperands.size(); i++) {
-				System.out.println("Expression in extended operands: infix =" + extendedOperands.get(i).toString()); //$NON-NLS-1$
 				Expression expression= extendedOperands.get(i);
 				expression.accept(new ChangeFieldToGetInvocationVisitor());
 			}
@@ -826,7 +824,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				AST ast= simpleName.getAST();
 				MethodInvocation methodInvocation= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, simpleName));
 				fRewriter.replace(simpleName, methodInvocation, createGroupDescription(READ_ACCESS));
-				System.out.println("Rewriter " + fRewriter.toString()); //$NON-NLS-1$
 			}
 			return true;
 		}

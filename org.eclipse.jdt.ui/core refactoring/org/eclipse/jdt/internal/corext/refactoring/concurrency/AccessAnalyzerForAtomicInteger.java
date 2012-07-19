@@ -618,7 +618,11 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				statement.accept(new FieldReferenceFinderAtomicInteger((Statement) enclosingStatement, fFieldBinding, fStatus));
 			} else {
 				if (sideEffectsFinder.hasSideEffects(statement)) {
-					createWarningStatus("Synchronized block contains side effects. Consider using locks instead."); //$NON-NLS-1$
+					createWarningStatus("Synchronized block contains side effects. "  //$NON-NLS-1$
+							+ " Cannot remove the synchronized block because "  //$NON-NLS-1$
+							+ "the statement '" + statement.toString()  //$NON-NLS-1$
+							+ "' will have side effects once refactored. " //$NON-NLS-1$
+							+ "Consider using locks instead."); //$NON-NLS-1$
 				}
 			}
 			insertTodoComments(syncBody, numEntries, statement);	

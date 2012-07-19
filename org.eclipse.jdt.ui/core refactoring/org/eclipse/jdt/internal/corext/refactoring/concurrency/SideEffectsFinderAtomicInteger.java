@@ -1,8 +1,5 @@
 package org.eclipse.jdt.internal.corext.refactoring.concurrency;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
@@ -11,7 +8,6 @@ import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
@@ -40,15 +36,7 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	
 	@Override
 	public boolean visit(MethodInvocation methodInvocation) {
-		if (considerBinding(resolveBinding(methodInvocation.getExpression()))) {
-			List<?> arguments= methodInvocation.arguments();
-			for (Iterator<?> iterator= arguments.iterator(); iterator.hasNext();) {
-				Expression expression= (Expression) iterator.next();
-				if (!(expression instanceof NumberLiteral) && !(expression instanceof SimpleName)) {
-					hasSideEffects= true;
-				}
-			}
-		}
+		hasSideEffects= true;
 		return true;
 	}
 	
@@ -120,6 +108,12 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	public boolean hasSideEffects(Statement statement) {
 		hasSideEffects= false;
 		statement.accept(this);
+		return hasSideEffects;
+	}
+
+	public boolean hasSideEffects(Expression expression) {
+		hasSideEffects= false;
+		expression.accept(this);
 		return hasSideEffects;
 	}
 }

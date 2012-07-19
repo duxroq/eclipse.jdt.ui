@@ -806,10 +806,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		rewriter.replace(statement, returnStatement, createGroupDescription(READ_ACCESS));
 		
 		if (checkSynchronizedBlockForReturnStatement(node)) {
-			createWarningStatus("Synchronized block contains a return statement with an assigment.  " + //$NON-NLS-1$
+			createWarningStatus("Synchronized block contains a return statement with an assignment.  " + //$NON-NLS-1$
 					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
 		} else if (checkSynchronizedMethodForReturnStatement(node)) {
-			createWarningStatus("Synchronized method contains a return statement with an assigment.  " + //$NON-NLS-1$
+			createWarningStatus("Synchronized method contains a return statement with an assignment.  " + //$NON-NLS-1$
 					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
 		}
 	}

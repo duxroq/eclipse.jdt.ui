@@ -286,6 +286,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	private void getExpressionsAndReplace(AST ast, Expression leftOperand, Expression rightOperand) {
+		
 		Expression newLeftOperand;
 		Expression newRightOperand;
 		newLeftOperand= getNewOperandWithGetInvocations(ast, leftOperand);
@@ -818,6 +819,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		
 		@Override
 		public boolean visit(SimpleName simpleName) {
+			
 			if (considerBinding(resolveBinding(simpleName)) && !simpleName.isDeclaration()) {
 				AST ast= simpleName.getAST();
 				MethodInvocation methodInvocation= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, simpleName));

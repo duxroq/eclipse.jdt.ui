@@ -345,12 +345,10 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		comment.addSetting(Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_field_pattern,
 				BasicElementLabels.getJavaElementName(fField.getElementName())));
 		
-		final AtomicIntegerRefactoringDescriptor descriptor1= RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);
+		final AtomicIntegerRefactoringDescriptor descriptor= RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, fField.getElementName());
 
-		final AtomicIntegerRefactoringDescriptor descriptor= descriptor1;
-		
 		final DynamicValidationRefactoringChange result= new DynamicValidationRefactoringChange(descriptor, getName());
 		TextChange[] changes= fChangeManager.getAllChanges();
 		pm.beginTask(NO_NAME, changes.length);
@@ -377,9 +375,9 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		try {
 			fField.rename(text, true, null);
 		} catch (JavaModelException e) {
-			return RefactoringStatus.createErrorStatus("Java Model Exception: rename field"); //$NON-NLS-1$
+			return RefactoringStatus.createErrorStatus(ConcurrencyRefactorings.AtomicIntegerRefactoring_java_model_exception_rename);
 		}
-		return RefactoringStatus.createInfoStatus("rename OK"); //$NON-NLS-1$
+		return RefactoringStatus.createInfoStatus(ConcurrencyRefactorings.AtomicIntegerRefactoring_rename_okay);
 	}
 	
 	public RefactoringStatus setInitializeDeclaration(boolean initializeDeclaration) {

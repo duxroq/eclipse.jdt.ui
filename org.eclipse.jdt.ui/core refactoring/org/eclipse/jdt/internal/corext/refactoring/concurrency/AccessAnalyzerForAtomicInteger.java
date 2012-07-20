@@ -50,14 +50,14 @@ import org.eclipse.jdt.internal.corext.dom.ModifierRewrite;
 
 public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
-	private static final String READ_ACCESS= "Read Access"; //$NON-NLS-1$
-	private static final String WRITE_ACCESS= "Write Access"; //$NON-NLS-1$
-	private static final String POSTFIX_ACCESS= "Postfix Access"; //$NON-NLS-1$
-	private static final String PREFIX_ACCESS= "Prefix Access"; //$NON-NLS-1$
-	private static final String REMOVE_SYNCHRONIZED_MODIFIER= "Remove Synchronized Modifier"; //$NON-NLS-1$
-	private static final String REMOVE_SYNCHRONIZED_BLOCK= "Remove Synchronized Block"; //$NON-NLS-1$
-	private static final String READ_AND_WRITE_ACCESS= "Read and Write Access"; //$NON-NLS-1$
-	private static final String COMMENT= "Comment"; //$NON-NLS-1$
+	private static final String READ_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_read_access;
+	private static final String WRITE_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_write_access;
+	private static final String POSTFIX_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_postfix_access;
+	private static final String PREFIX_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_prefix_access;
+	private static final String REMOVE_SYNCHRONIZED_MODIFIER= ConcurrencyRefactorings.ConcurrencyRefactorings_remove_synch_mod;
+	private static final String REMOVE_SYNCHRONIZED_BLOCK= ConcurrencyRefactorings.ConcurrencyRefactorings_remove_synch_block;
+	private static final String READ_AND_WRITE_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_read_and_write_access;
+	private static final String COMMENT= ConcurrencyRefactorings.ConcurrencyRefactorings_comment;
 	
 	private IVariableBinding fFieldBinding;
 	private ASTRewrite fRewriter;
@@ -126,7 +126,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			// Write access.
 			AST ast= node.getAST();	
 			MethodInvocation invocation= ast.newMethodInvocation();
-			invocation.setName(ast.newSimpleName("set")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_set));
 			Expression receiver= getReceiver(lhs);
 			if (receiver != null) {
 				// VIP!! Here we use node.coySubtree because the expression/arguments might be overriden by the later code.
@@ -165,11 +165,11 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		
 		if (operator == Assignment.Operator.PLUS_ASSIGN || operator == Assignment.Operator.MINUS_ASSIGN) {
 			if (operator == Assignment.Operator.PLUS_ASSIGN) {
-				invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
+				invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_addAndGet));
 				rightHandSide= getNewOperandWithGetInvocations(ast, rightHandSide);
 				arguments.add(rightHandSide);
 			} else if (operator == Assignment.Operator.MINUS_ASSIGN) {
-				invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
+				invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_addAndGet));
 				rightHandSide.accept(new ChangeFieldToGetInvocationVisitor());
 				arguments.add(createNegativeExpression(rightHandSide));
 			}
@@ -183,7 +183,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			InfixExpression.Operator newOperator;
 			newOperator= getOperatorFromAssignmentOperator(operator);
 			MethodInvocation invocationGet= ast.newMethodInvocation();
-			invocationGet.setName(ast.newSimpleName("get")); //$NON-NLS-1$
+			invocationGet.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_get));
 			invocationGet.setExpression(ast.newSimpleName(fFieldBinding.getName()));
 			InfixExpression newInfixExpression= ast.newInfixExpression();
 			rightHandSide= getNewOperandWithGetInvocations(ast, rightHandSide);
@@ -197,7 +197,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				newInfixExpression.setRightOperand(rightHandSide);
 			}
 			arguments.add(newInfixExpression);
-			insertLineCommentBeforeNode("// TODO The operations below cannot be executed atomically.",  //$NON-NLS-1$
+			insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
 					body, statement, Block.STATEMENTS_PROPERTY);
 		}
 		return false;
@@ -301,9 +301,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		ASTNode statement= ASTNodes.getParent(node, Statement.class);
 		Block body= (Block) ASTNodes.getParent(node, Block.class);
 		
-		insertLineCommentBeforeNode("// TODO The operations below cannot be executed atomically.",  //$NON-NLS-1$
+		insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
 				body, statement, Block.STATEMENTS_PROPERTY);
-		createWarningStatus("The statement '" + statement.toString() + "' cannot be executed atomically.");  //$NON-NLS-1$//$NON-NLS-2$
+		createWarningStatus(ConcurrencyRefactorings.AtomicInteger_statement + statement.toString()
+				+ ConcurrencyRefactorings.AtomicInteger_warning_cannot_execute_statement_atomically);
 	}
 
 	private Expression getNewOperandWithGetInvocations(AST ast, Expression operand) {
@@ -333,7 +334,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		
 		MethodInvocation methodInvocation= ast.newMethodInvocation();
 		methodInvocation.setExpression(expression);
-		methodInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
+		methodInvocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_get));
 		return methodInvocation;
 	}
 
@@ -359,10 +360,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		boolean needToVisitRHS= false;
 		
 		if (operator == InfixExpression.Operator.PLUS) {
-			invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_addAndGet));
 			invocation.arguments().add(fRewriter.createMoveTarget(infixExpression));
 		} else if (operator == InfixExpression.Operator.MINUS) {
-			invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_addAndGet));
 			
 			InfixExpression newInfixExpression= ast.newInfixExpression();
 			Expression rightOperand= infixExpression.getRightOperand();
@@ -406,10 +407,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			List<Expression> arguments, Expression operand, Object operator) {
 		
 		if (operator == InfixExpression.Operator.PLUS || operator == Assignment.Operator.PLUS_ASSIGN) {
-			invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_addAndGet));
 			arguments.add((Expression) fRewriter.createMoveTarget(operand));
 		} else if (operator == InfixExpression.Operator.MINUS || operator == Assignment.Operator.MINUS_ASSIGN) {
-			invocation.setName(ast.newSimpleName("addAndGet")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_addAndGet));
 			arguments.add(createNegativeExpression(operand));
 		} else {
 			createUnsafeOperatorWarning(node);
@@ -419,7 +420,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				operator= getOperatorFromAssignmentOperator((Assignment.Operator) operator);
 			}
 			MethodInvocation invocationGet= ast.newMethodInvocation();
-			invocationGet.setName(ast.newSimpleName("get")); //$NON-NLS-1$
+			invocationGet.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_get));
 			invocationGet.setExpression(ast.newSimpleName(fFieldBinding.getName()));
 			InfixExpression newInfixExpression= ast.newInfixExpression();
 			Expression newOperand= getNewOperandWithGetInvocations(ast, operand);
@@ -436,7 +437,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			arguments.add(newInfixExpression);
 			ExpressionStatement setInvocationStatement1= ast.newExpressionStatement(invocation);
 			Statement setInvocationStatement= setInvocationStatement1;
-			ListRewrite rewriter= insertLineCommentBeforeNode("// TODO The operations below cannot be executed atomically.",  //$NON-NLS-1$
+			ListRewrite rewriter= insertLineCommentBeforeNode(
+					ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
 					body, statement, Block.STATEMENTS_PROPERTY);
 			rewriter.replace(statement, setInvocationStatement, createGroupDescription(READ_AND_WRITE_ACCESS));
 		}
@@ -450,7 +452,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		if (syncStatement != null) {
 			Block methodBlock= ((MethodDeclaration) methodDecl).getBody();
 			
-			insertLineCommentBeforeNode("// TODO The statements in the block below are not properly synchronized.", //$NON-NLS-1$
+			insertLineCommentBeforeNode(
+					ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
 					methodBlock, syncStatement, Block.STATEMENTS_PROPERTY);
 			return true;
 		}	
@@ -468,7 +471,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			MethodDeclaration[] methods= typeDeclaration.getMethods();
 			for (int i= 0; i < methods.length; i++) {
 				if (methods[i] == methodDecl) {
-					insertLineCommentBeforeNode("// TODO The statements in the method below are not properly synchronized.", //$NON-NLS-1$
+					insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
 							typeDeclaration, methodDecl, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 					break;
 				}
@@ -479,15 +482,15 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 	
 	private void createUnsafeOperatorWarning(Assignment node) {
-		
-		fStatus.addWarning("Cannot execute " //$NON-NLS-1$
+
+		fStatus.addWarning(ConcurrencyRefactorings.AtomicInteger_unsafe_operator_warning1
 				+ fFieldBinding.getName()
-				+ ".set(" //$NON-NLS-1$
+				+ ConcurrencyRefactorings.AtomicInteger_unsafe_operator_warning2
 				+ fFieldBinding.getName()
-				+ ".get()) " //$NON-NLS-1$
-				+ "atomically. This would be required in converting " //$NON-NLS-1$
+				+ ConcurrencyRefactorings.AtomicInteger_unsafe_operator_warning3
+				+ ConcurrencyRefactorings.AtomicInteger_unsafe_operator_warning4
 				+ node.toString()
-				+ ". Consider using locks instead."); //$NON-NLS-1$	
+				+ ConcurrencyRefactorings.AtomicInteger_unsafe_operator_warning5);
 	}
 
 	private PrefixExpression createNegativeExpression(Expression expression) {
@@ -522,10 +525,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		invocation.setExpression((Expression) fRewriter.createCopyTarget(operand));
 
 		if (operator == PostfixExpression.Operator.INCREMENT) {
-			invocation.setName(ast.newSimpleName("getAndIncrement")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_getAndIncrement));
 		}
 		else if (operator == PostfixExpression.Operator.DECREMENT) {
-			invocation.setName(ast.newSimpleName("getAndDecrement")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_getAndDecrement));
 		}
 		if ( !(changeSynchronizedBlock(expression, invocation, POSTFIX_ACCESS) || changeSynchronizedMethod(expression, invocation, POSTFIX_ACCESS)) ) {
 			fRewriter.replace(expression, invocation, createGroupDescription(POSTFIX_ACCESS));
@@ -548,10 +551,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		invocation.setExpression((Expression) fRewriter.createCopyTarget(operand));
 
 		if (operator == PrefixExpression.Operator.INCREMENT) {
-			invocation.setName(ast.newSimpleName("incrementAndGet")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_incrementAndGet));
 		}
 		else if (operator == PrefixExpression.Operator.DECREMENT) {
-			invocation.setName(ast.newSimpleName("decrementAndGet")); //$NON-NLS-1$
+			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_decrementAndGet));
 		}
 		if ( !(changeSynchronizedBlock(expression, invocation, PREFIX_ACCESS) || changeSynchronizedMethod(expression, invocation, PREFIX_ACCESS)) ) {
 			fRewriter.replace(expression, invocation, createGroupDescription(PREFIX_ACCESS));
@@ -561,7 +564,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	
 	@Override
 	public void endVisit(CompilationUnit node) {
-		fImportRewriter.addImport("java.util.concurrent.atomic.AtomicInteger"); //$NON-NLS-1$
+		fImportRewriter.addImport(ConcurrencyRefactorings.AtomicIntegerRefactoring_import);
 	}
 	
 	private boolean changeSynchronizedBlock(ASTNode node, Expression invocation, String accessType) {
@@ -617,20 +620,20 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		for (Iterator<?> iterator= statements.iterator(); iterator.hasNext();) {
 			Statement statement= (Statement) iterator.next();
 			if (!statement.equals(enclosingStatement)){
-				statement.accept(new FieldReferenceFinderAtomicInteger((Statement) enclosingStatement, fFieldBinding, fStatus));
+				statement.accept(new FieldReferenceFinderAtomicInteger(fStatus));
 			} else {
 				if (sideEffectsFinder.hasSideEffects(statement)) {
-					createWarningStatus("Synchronized block contains side effects. "  //$NON-NLS-1$
-							+ " Cannot remove the synchronized block because "  //$NON-NLS-1$
-							+ "the statement '" + statement.toString()  //$NON-NLS-1$
-							+ "' will have side effects once refactored. " //$NON-NLS-1$
-							+ "Consider using locks instead."); //$NON-NLS-1$
+					createWarningStatus(ConcurrencyRefactorings.AtomicInteger_warning_side_effects1
+							+ ConcurrencyRefactorings.AtomicInteger_warning_side_effects2
+							+ ConcurrencyRefactorings.AtomicInteger_warning_side_effects3
+							+ statement.toString()
+							+ ConcurrencyRefactorings.AtomicInteger_warning_side_effects4);
 				}
 			}
 			insertTodoComments(syncBody, numEntries, statement);	
 		}
 		if (numEntries < (fStatus.getEntries().length + 1)) {
-				insertLineCommentBeforeNode("// TODO The statement below is not properly synchronized.", //$NON-NLS-1$
+				insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
 						syncBody, enclosingStatement, Block.STATEMENTS_PROPERTY);
 		}
 	}
@@ -639,10 +642,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		if (numEntries < (fStatus.getEntries().length + 1)) {
 			RefactoringStatusEntry[] entries= fStatus.getEntries();	
 			RefactoringStatusEntry refactoringStatusEntry= entries[(entries.length-1)];
-			if (refactoringStatusEntry.getMessage().matches(
-					"Synchronized block contains references to another field.*AtomicInteger cannot preserve invariants over two field accesses, " + //$NON-NLS-1$
-					".*consider using locks instead.")) { //$NON-NLS-1$
-				insertLineCommentBeforeNode("// TODO The statement below is not properly synchronized.", //$NON-NLS-1$ 
+			if (refactoringStatusEntry.getMessage().matches(ConcurrencyRefactorings.AtomicInteger_warning_two_field_accesses)) {
+				insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
 						syncBody, statement, Block.STATEMENTS_PROPERTY);
 			}
 		}
@@ -786,7 +787,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		AST ast= node.getAST();
 		MethodInvocation getInvocation= ast.newMethodInvocation();
 		
-		getInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
+		getInvocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_get));
 		Expression receiver= getReceiver(leftHandSide);
 		if (receiver != null) {
 			getInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
@@ -799,15 +800,14 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		ReturnStatement returnStatement= ast.newReturnStatement();
 		returnStatement.setExpression(getInvocation);
 		rewriter.replace(statement, returnStatement, createGroupDescription(READ_ACCESS));
-		String comment= "// TODO The return assignment could not be executed atomically."; //$NON-NLS-1$
-		insertLineCommentBeforeNode(comment, body, returnStatement, Block.STATEMENTS_PROPERTY);
+		insertLineCommentBeforeNode(
+				ConcurrencyRefactorings.AtomicInteger_todo_comment_return_statement_could_not_be_executed_atomically,
+				body, returnStatement, Block.STATEMENTS_PROPERTY);
 		
 		if (checkSynchronizedBlockForReturnStatement(node)) {
-			createWarningStatus("Synchronized block contains a return statement with an assignment.  " + //$NON-NLS-1$
-					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
+			createWarningStatus(ConcurrencyRefactorings.AtomicInteger_warning_cannot_remove_synch_block_return_assignment);
 		} else if (checkSynchronizedMethodForReturnStatement(node)) {
-			createWarningStatus("Synchronized method contains a return statement with an assignment.  " + //$NON-NLS-1$
-					"Cannot remove the synchronized modifier without introducing an unsafe thread environment."); //$NON-NLS-1$
+			createWarningStatus(ConcurrencyRefactorings.AtomicInteger_warning_cannot_remove_synch_mod_return_assignment);
 		}
 	}
 	

@@ -10,19 +10,14 @@ import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 
 public class FieldReferenceFinderAtomicInteger extends ASTVisitor {
 
-	private final IVariableBinding notIncludingField;
 	private final RefactoringStatus status;
-	private final Statement enclosingStatement;
 
 	public FieldReferenceFinderAtomicInteger(
-			Statement enclosingStatement, IVariableBinding notIncludingField, RefactoringStatus status) {
-				this.enclosingStatement = enclosingStatement;
-				this.notIncludingField = notIncludingField;
+			RefactoringStatus status) {
 				this.status = status;
 	}
 	
@@ -31,11 +26,10 @@ public class FieldReferenceFinderAtomicInteger extends ASTVisitor {
 		IBinding identifierBinding= resolveBinding(identifier);
 		if (identifierBinding instanceof IVariableBinding) {
 			IVariableBinding varBinding= (IVariableBinding) identifierBinding;
-			if (varBinding.isField() /*&& !varBinding.equals(notIncludingField)*/) {
-				RefactoringStatus warningStatus= RefactoringStatus.createWarningStatus("Synchronized block contains references to another field \"" //$NON-NLS-1$
+			if (varBinding.isField()) {
+				RefactoringStatus warningStatus= RefactoringStatus.createWarningStatus(ConcurrencyRefactorings.AtomicInteger_warning_two_field_accesses
 						+ identifier.getIdentifier()
-						+ "\". AtomicInteger cannot preserve invariants over two field accesses, " + //$NON-NLS-1$
-								"consider using locks instead."); //$NON-NLS-1$
+						+ ConcurrencyRefactorings.AtomicInteger_warning_two_field_accesses2);
 				RefactoringStatusEntry[] entries= status.getEntries();
 				boolean alreadyExistingWarning= false;
 				for (int i= 0; i < entries.length; i++) {

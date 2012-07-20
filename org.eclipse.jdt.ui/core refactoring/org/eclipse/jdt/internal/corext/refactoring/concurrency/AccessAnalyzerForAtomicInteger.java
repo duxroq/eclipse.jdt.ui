@@ -112,6 +112,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	public boolean visit(Assignment node) {
 		
 		boolean needToVisitRHS= true;
+		boolean inReturnStatement= false;
 		Expression lhs= node.getLeftHandSide();
 				
 		if (!considerBinding(resolveBinding(lhs))) {
@@ -120,8 +121,9 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		ASTNode statement= ASTNodes.getParent(node, Statement.class);
 		if (!checkParent(node) && statement instanceof ReturnStatement) {
 				// TODO ?
-				refactorReturnAtomicIntegerAssignment(node, (ReturnStatement) statement, lhs);
-				return true;
+				inReturnStatement= true;
+				//refactorReturnAtomicIntegerAssignment(node, (ReturnStatement) statement, lhs);
+				//return true;
 		}
 		if (!fIsFieldFinal) {
 			// Write access.
@@ -148,8 +150,12 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (node.getOperator() != Assignment.Operator.ASSIGN) {
 				compoundAssignmentHandler(node, ast, invocation, arguments, node.getRightHandSide());
 			}
-			if ( !(changeSynchronizedBlock(node, invocation, WRITE_ACCESS) || changeSynchronizedMethod(node, invocation, WRITE_ACCESS)) ) {
-				fRewriter.replace(node, invocation, createGroupDescription(WRITE_ACCESS));
+			if (!inReturnStatement) {
+				if ( !(changeSynchronizedBlock(node, invocation, WRITE_ACCESS) || changeSynchronizedMethod(node, invocation, WRITE_ACCESS)) ) {
+					fRewriter.replace(node, invocation, createGroupDescription(WRITE_ACCESS));
+				}
+			} else {
+				refactorReturnAtomicIntegerAssignment(node, (ReturnStatement) statement, lhs, invocation);
 			}
 		}		
 		return false;
@@ -303,6 +309,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	private Expression getNewOperandWithGetInvocations(AST ast, Expression operand) {
+		
 		Expression newOperand;
 		if (considerBinding(resolveBinding(operand))) {
 			newOperand= getMethodInvocationGet(ast, ast.newSimpleName(fFieldBinding.getName()));
@@ -314,6 +321,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	private void changeFieldReferencesInExtendedOperandsToGetInvocations(InfixExpression infixExpression) {
+		
 		if (infixExpression.hasExtendedOperands()) {
 			List<Expression> extendedOperands= infixExpression.extendedOperands();
 			for (int i= 0; i < extendedOperands.size(); i++) {
@@ -324,6 +332,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 	
 	private MethodInvocation getMethodInvocationGet(AST ast, Expression expression) {
+		
 		MethodInvocation methodInvocation= ast.newMethodInvocation();
 		methodInvocation.setExpression(expression);
 		methodInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
@@ -413,9 +422,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			}
 			MethodInvocation invocationGet= ast.newMethodInvocation();
 			invocationGet.setName(ast.newSimpleName("get")); //$NON-NLS-1$
-//			if (receiver != null) {
-//				invocationGet.setExpression((Expression) ASTNode.copySubtree(ast, receiver)); 
-//			}
 			invocationGet.setExpression(ast.newSimpleName(fFieldBinding.getName()));
 			InfixExpression newInfixExpression= ast.newInfixExpression();
 			Expression newOperand= getNewOperandWithGetInvocations(ast, operand);
@@ -670,6 +676,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	private void removeSynchronizedModifier(MethodDeclaration methodDecl, int modifiers) {
+		
 		ModifierRewrite methodRewriter= ModifierRewrite.create(fRewriter, methodDecl);
 		int synchronizedModifier= Modifier.SYNCHRONIZED;
 		synchronizedModifier= ~ synchronizedModifier;
@@ -775,33 +782,27 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return rewriter;
 	}
 	
-	private void refactorReturnAtomicIntegerAssignment(Assignment node, ReturnStatement statement, Expression leftHandSide) {
+	private void refactorReturnAtomicIntegerAssignment(Assignment node, ReturnStatement statement, Expression leftHandSide, MethodInvocation invocation) {
 		
 		Block body= (Block) ASTNodes.getParent(node, Block.class);
 		AST ast= node.getAST();
-		
 		MethodInvocation getInvocation= ast.newMethodInvocation();
-		MethodInvocation setInvocation=	ast.newMethodInvocation();
 		
-		setInvocation.setName(ast.newSimpleName("set")); //$NON-NLS-1$
 		getInvocation.setName(ast.newSimpleName("get")); //$NON-NLS-1$
-		
 		Expression receiver= getReceiver(leftHandSide);
 		if (receiver != null) {
-			setInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
 			getInvocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
 		}
-		List<Expression> arguments= setInvocation.arguments();
-		Expression copyRHS= (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
-		arguments.add(copyRHS);
 		
 		ListRewrite rewriter= fRewriter.getListRewrite(body, Block.STATEMENTS_PROPERTY);
-		ExpressionStatement setInvocationStatement= ast.newExpressionStatement(setInvocation);
+		ExpressionStatement setInvocationStatement= ast.newExpressionStatement(invocation);
 		rewriter.insertBefore(setInvocationStatement, statement, createGroupDescription(WRITE_ACCESS));
 		
 		ReturnStatement returnStatement= ast.newReturnStatement();
 		returnStatement.setExpression(getInvocation);
 		rewriter.replace(statement, returnStatement, createGroupDescription(READ_ACCESS));
+		String comment= "// TODO The return assignment could not be executed atomically."; //$NON-NLS-1$
+		insertLineCommentBeforeNode(comment, body, returnStatement, Block.STATEMENTS_PROPERTY);
 		
 		if (checkSynchronizedBlockForReturnStatement(node)) {
 			createWarningStatus("Synchronized block contains a return statement with an assignment.  " + //$NON-NLS-1$

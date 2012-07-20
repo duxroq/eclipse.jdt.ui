@@ -10,6 +10,7 @@ public class TestReturnAssignmentInSynchronizedBlock {
 		// TODO The statements in the block below are not properly synchronized.
 		synchronized (this) {
 			i.set(12);
+			// TODO The return assignment could not be executed atomically.
 			return i.get();
 		}
 	}

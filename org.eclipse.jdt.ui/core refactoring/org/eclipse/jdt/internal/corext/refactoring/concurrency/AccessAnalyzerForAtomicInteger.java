@@ -120,10 +120,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 		ASTNode statement= ASTNodes.getParent(node, Statement.class);
 		if (!checkParent(node) && statement instanceof ReturnStatement) {
-				// TODO ?
 				inReturnStatement= true;
-				//refactorReturnAtomicIntegerAssignment(node, (ReturnStatement) statement, lhs);
-				//return true;
 		}
 		if (!fIsFieldFinal) {
 			// Write access.

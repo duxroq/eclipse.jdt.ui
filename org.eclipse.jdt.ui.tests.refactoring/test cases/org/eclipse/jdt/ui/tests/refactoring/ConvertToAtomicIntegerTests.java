@@ -44,11 +44,11 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 
 	protected String getResourceLocation() {
-		return "ConvertToAtomicInteger/"; //$NON-NLS-1$
+		return "ConvertToAtomicInteger/"; 
 	}
 	
 	protected String adaptName(String name) {
-		return Character.toUpperCase(name.charAt(0)) + name.substring(1) + ".java"; //$NON-NLS-1$
+		return Character.toUpperCase(name.charAt(0)) + name.substring(1) + ".java"; 
 	}	
 	
 	protected void performTest(IPackageFragment packageFragment, String id, String outputFolder, String fieldName) throws Exception {
@@ -72,13 +72,11 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		assertNotNull(field);
 		
 		initializePreferences();
-		
+
 		ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(field);
-		if (refactoring != null) {
-			RefactoringStatus status= refactoring.checkAllConditions(new NullProgressMonitor());
-			assertTrue(status.hasWarning());
-			performTest(unit, refactoring, COMPARE_WITH_OUTPUT, getProofedContent(outputFolder, id), true);
-		}
+		RefactoringStatus status= refactoring.checkAllConditions(new NullProgressMonitor());
+		assertTrue(status.hasWarning());
+		performTest(unit, refactoring, COMPARE_WITH_OUTPUT, getProofedContent(outputFolder, id), true);
 	}
 	
 	protected void performInvalidTest(IPackageFragment packageFragment,
@@ -90,19 +88,17 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		initializePreferences();
 
 		ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(field);
-		if (refactoring != null) {
-			RefactoringStatus status= refactoring.checkAllConditions(new NullProgressMonitor());
-			assertTrue(status.hasError());
-			assertEquals(1, status.getEntries().length);
-		}
+		RefactoringStatus status= refactoring.checkAllConditions(new NullProgressMonitor());
+		assertTrue(status.hasError());
+		assertEquals(1, status.getEntries().length);
 	}	
 	
 	private void initializePreferences() {
 		Hashtable<String, String> options= new Hashtable<String, String>();
-		options.put(JavaCore.CODEASSIST_FIELD_PREFIXES, ""); //$NON-NLS-1$
-		options.put(JavaCore.CODEASSIST_STATIC_FIELD_PREFIXES, ""); //$NON-NLS-1$
-		options.put(JavaCore.CODEASSIST_FIELD_SUFFIXES, ""); //$NON-NLS-1$
-		options.put(JavaCore.CODEASSIST_STATIC_FIELD_SUFFIXES, ""); //$NON-NLS-1$
+		options.put(JavaCore.CODEASSIST_FIELD_PREFIXES, ""); 
+		options.put(JavaCore.CODEASSIST_STATIC_FIELD_PREFIXES, ""); 
+		options.put(JavaCore.CODEASSIST_FIELD_SUFFIXES, ""); 
+		options.put(JavaCore.CODEASSIST_STATIC_FIELD_SUFFIXES, ""); 
 		JavaCore.setOptions(options);
 	}
 	
@@ -120,11 +116,11 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 
 	private void objectTest(String fieldName) throws Exception {
-		performTest(fgTestSetup.getObjectPackage(), getName(), "object_out", fieldName); //$NON-NLS-1$
+		performTest(fgTestSetup.getObjectPackage(), getName(), "object_out", fieldName); 
 	}
 	
 //	private void baseTest(String fieldName) throws Exception {
-//		performTest(fgTestSetup.getBasePackage(), getName(), "base_out", fieldName); //$NON-NLS-1$
+//		performTest(fgTestSetup.getBasePackage(), getName(), "base_out", fieldName); 
 //	}
 //	
 //	private void invalidTest(String fieldName) throws Exception {
@@ -132,11 +128,11 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 //	}
 //	
 //	private void existingTest(String fieldName) throws Exception {
-//		performTest(fgTestSetup.getExistingMethodPackage(), getName(), "existingmethods_out", fieldName); //$NON-NLS-1$
+//		performTest(fgTestSetup.getExistingMethodPackage(), getName(), "existingmethods_out", fieldName); 
 //	}
 	
 	private void testWithWarning(String fieldName) throws Exception {
-		performTestWithWarning(fgTestSetup.getObjectPackage(), getName(), "object_out", fieldName); //$NON-NLS-1$
+		performTestWithWarning(fgTestSetup.getObjectPackage(), getName(), "object_out", fieldName); 
 	}
 	
 	//=====================================================================================
@@ -168,15 +164,15 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 	
 	public void testMultipleFieldRefsInEnclosingStatementSynchBlock() throws Exception {
-		objectTest("i"); //$NON-NLS-1$
+		objectTest("i"); 
 	}
 
 	public void testMultipleFieldRefsInEnclosingStatementSynchMethod() throws Exception {
-		objectTest("i"); //$NON-NLS-1$
+		objectTest("i"); 
 	}
 	
 	public void testMultipleInfixExpressionsWithReferenceToChosenField() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testMultipleInfixExpWithMultipleRefsToChosenField() throws Exception {
@@ -184,161 +180,161 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 	
 	public void testReadAccess() throws Exception {
-		objectTest("field"); //$NON-NLS-1$
+		objectTest("field"); 
 	}
 	
 	public void testSynchronizedBlockOneSingleAccess() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testSynchronizedBlockMultipleAccess() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testIncrementPrefix() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}	
 
 	public void testIncrementPostfix() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testDecrementPrefix() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}	
 
 	public void testDecrementPostfix() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testMultipleInfixExpressionsAssignment() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testMultipleInfixExpressionsAssignmentInSynchBlock() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testMultipleInfixExpressionsAssignmentInSynchMethod() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testRemoveSynchronizedBlockIncrement() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testNotRemoveSynchronizedBlockMultipleAccess() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testSynchronizedMethodSingleAccess() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testSynchronizedMethodMultipleAccess() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testSynchronizedMethodSingleAccessIncrement() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testExistingImport() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testIncrementByAdding() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testAddAssign() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testSubtract() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testFieldAndOvershadowingVariable() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testNoFieldReference() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testThisDotMethod() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testSuperDotMethod() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testInnerClass() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testCounterExample() throws Exception {
-		objectTest("value"); //$NON-NLS-1$
+		objectTest("value"); 
 	}
 	
 	public void testFieldModifier() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testThisAccessWithInfixExpression() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testThisAccessWithInfixExpressionOfOtherVariable() throws Exception {
-		objectTest("f"); //$NON-NLS-1$
+		objectTest("f"); 
 	}
 	
 	public void testReturnAssignment() throws Exception {
-		objectTest("i");  //$NON-NLS-1$
+		objectTest("i");  
 	}
 
 	public void testAddingInReverse() throws Exception {
-		objectTest("i");  //$NON-NLS-1$
+		objectTest("i");  
 	}
 	
 	//------------------------- Cases below do meet preconditions - however should throw a warning
 	
 	public void testWarningDueToMultiplication() throws Exception {
-		testWithWarning("f"); //$NON-NLS-1$
+		testWithWarning("f"); 
 	}
 	
 	public void testWarningDueToMultiplicationAssignment() throws Exception {
-		testWithWarning("f"); //$NON-NLS-1$
+		testWithWarning("f"); 
 	}
 	
 	public void testWarningDueToDivisionAssignment() throws Exception {
-		testWithWarning("f"); //$NON-NLS-1$
+		testWithWarning("f"); 
 	}
 	
 	public void testWarningDueToTwoFieldsInSynchronizedBlock() throws Exception {
-		testWithWarning("f"); //$NON-NLS-1$
+		testWithWarning("f"); 
 	}
 	
 	public void testWarningDueToTwoFieldsInSynchronizedMethod() throws Exception {
-		testWithWarning("f"); //$NON-NLS-1$
+		testWithWarning("f"); 
 	}
 	
 	public void testWarningDuetoFieldAccessedTwiceInSynchronizedBlock() throws Exception {
-		testWithWarning("f"); //$NON-NLS-1$
+		testWithWarning("f");
 	}
 	
 	public void testWarningDueToFieldAccessedTwiceInSynchronizedMethod() throws Exception {
-		testWithWarning("f"); //$NON-NLS-1$
+		testWithWarning("f"); 
 	}
 	
 	public void testReturnAssignmentInSynchronizedMethod() throws Exception {
-		testWithWarning("i"); //$NON-NLS-1$
+		testWithWarning("i"); 
 	}
 	
 	public void testReturnAssignmentInSynchronizedBlock() throws Exception {
-		testWithWarning("i"); //$NON-NLS-1$
+		testWithWarning("i"); 
 	}
 	
 	//------------------------- Cases below do not meet preconditions - therefore refactoring should not proceed

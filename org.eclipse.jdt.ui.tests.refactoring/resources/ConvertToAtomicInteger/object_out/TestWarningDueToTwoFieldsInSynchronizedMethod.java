@@ -8,9 +8,8 @@ public class TestWarningDueToTwoFieldsInSynchronizedMethod {
 	int g;
 
 	synchronized void twoFieldsInSyncMethod() {
-		// TODO The statement below is not properly synchronized.
+		// TODO The statements below are not properly synchronized.
 		f.addAndGet(12);
-		// TODO The statement below is not properly synchronized.
 		g = g + 3;
 	}
 }

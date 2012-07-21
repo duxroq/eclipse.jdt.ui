@@ -453,7 +453,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			Block methodBlock= ((MethodDeclaration) methodDecl).getBody();
 			
 			insertLineCommentBeforeNode(
-					ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
+					ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized_block,
 					methodBlock, syncStatement, Block.STATEMENTS_PROPERTY);
 			return true;
 		}	
@@ -471,7 +471,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			MethodDeclaration[] methods= typeDeclaration.getMethods();
 			for (int i= 0; i < methods.length; i++) {
 				if (methods[i] == methodDecl) {
-					insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
+					insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized_method,
 							typeDeclaration, methodDecl, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 					break;
 				}

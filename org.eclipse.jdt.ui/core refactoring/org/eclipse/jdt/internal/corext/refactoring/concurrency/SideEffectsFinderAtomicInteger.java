@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
@@ -62,11 +63,24 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 		Expression leftOperand= infixExpression.getLeftOperand();
 		Expression rightOperand= infixExpression.getRightOperand();
 		
+		boolean rightOperandIsField= considerBinding(resolveBinding(rightOperand));
+		boolean leftOperandIsField= considerBinding(resolveBinding(leftOperand));		
+		boolean bothAreChosenField= leftOperandIsField && rightOperandIsField;
+		boolean noneAreChosenField= !leftOperandIsField && !rightOperandIsField;
+		boolean oneIsChosenField= leftOperandIsField != rightOperandIsField;
+		
 		if (infixExpression.hasExtendedOperands()) {
 			hasSideEffects= true;
 		}
-		if (!considerBinding(resolveBinding(leftOperand)) && !considerBinding(resolveBinding(rightOperand))) {
+		if (noneAreChosenField) {
 			hasSideEffects= true;
+		} else if (bothAreChosenField) {
+			hasSideEffects= true;
+		} else if (oneIsChosenField) {
+			if ((!(leftOperand instanceof SimpleName) && !(leftOperand instanceof NumberLiteral))
+					|| (!(rightOperand instanceof SimpleName) && !(rightOperand instanceof NumberLiteral))) {
+				hasSideEffects= true;
+			}
 		}
 		if (leftOperand instanceof MethodInvocation || rightOperand instanceof MethodInvocation) {
 			hasSideEffects= true;

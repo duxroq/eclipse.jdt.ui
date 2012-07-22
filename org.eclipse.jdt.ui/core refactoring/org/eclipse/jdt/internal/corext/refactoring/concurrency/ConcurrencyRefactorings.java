@@ -60,6 +60,7 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String AtomicInteger_warning_cannot_remove_synch_block_return_assignment;
 	public static String AtomicInteger_statement;
 	public static String AtomicInteger_warning_cannot_execute_statement_atomically;
+	public static String AtomicInteger_warning_cannot_be_refactored_atomically;
 	public static String AtomicInteger_unsafe_operator_warning1;
 	public static String AtomicInteger_unsafe_operator_warning2;
 	public static String AtomicInteger_unsafe_operator_warning3;

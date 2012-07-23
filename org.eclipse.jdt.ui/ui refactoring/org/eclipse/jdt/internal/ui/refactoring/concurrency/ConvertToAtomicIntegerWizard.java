@@ -9,7 +9,6 @@ import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIn
 public class ConvertToAtomicIntegerWizard extends RefactoringWizard {
 
 	public ConvertToAtomicIntegerWizard(Refactoring refactoring, int flags) {
-
 		super(refactoring, flags);
 	}
 
@@ -21,7 +20,6 @@ public class ConvertToAtomicIntegerWizard extends RefactoringWizard {
 
 	@Override
 	protected void addUserInputPages() {
-
 		addPage(new ConvertToAtomicIntegerInputPage(ConcurrencyRefactorings.AtomicIntegerWizard_name));
 	}
 

@@ -16,7 +16,6 @@ public class AtomicIntegerRefactoringDescriptor extends JavaRefactoringDescripto
 	}
 
 	public AtomicIntegerRefactoringDescriptor() {
-
 		super(IJavaRefactorings.ATOMIC_INTEGER);
 	}
 }

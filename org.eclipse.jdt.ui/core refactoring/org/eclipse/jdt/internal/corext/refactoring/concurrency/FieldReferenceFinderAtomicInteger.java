@@ -17,7 +17,6 @@ public class FieldReferenceFinderAtomicInteger extends ASTVisitor {
 	private final RefactoringStatus status;
 
 	public FieldReferenceFinderAtomicInteger(RefactoringStatus status) {
-
 		this.status= status;
 	}
 

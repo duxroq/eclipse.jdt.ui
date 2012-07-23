@@ -24,7 +24,6 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	private static ConvertToAtomicIntegerTestSetup fgTestSetup;
 
 	public ConvertToAtomicIntegerTests(String name) {
-
 		super(name);
 	}
 
@@ -47,12 +46,10 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 
 	protected String getResourceLocation() {
-
 		return "ConvertToAtomicInteger/";
 	}
 
 	protected String adaptName(String name) {
-
 		return Character.toUpperCase(name.charAt(0)) + name.substring(1) + ".java";
 	}
 
@@ -132,30 +129,25 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	}
 
 	private void objectTest(String fieldName) throws Exception {
-
 		performTest(fgTestSetup.getObjectPackage(), getName(), "object_out", fieldName);
 	}
 
 	@SuppressWarnings("unused")
 	private void baseTest(String fieldName) throws Exception {
-
 		performTest(fgTestSetup.getBasePackage(), getName(), "base_out", fieldName);
 	}
 
 	@SuppressWarnings("unused")
 	private void invalidTest(String fieldName) throws Exception {
-
 		performInvalidTest(fgTestSetup.getInvalidPackage(), getName(), fieldName);
 	}
 
 	@SuppressWarnings("unused")
 	private void existingTest(String fieldName) throws Exception {
-
 		performTest(fgTestSetup.getExistingMethodPackage(), getName(), "existingmethods_out", fieldName);
 	}
 
 	private void testWithWarning(String fieldName) throws Exception {
-
 		performTestWithWarning(fgTestSetup.getObjectPackage(), getName(), "object_out", fieldName);
 	}
 

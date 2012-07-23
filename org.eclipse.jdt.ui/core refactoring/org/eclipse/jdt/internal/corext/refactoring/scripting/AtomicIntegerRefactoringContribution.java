@@ -29,7 +29,6 @@ public class AtomicIntegerRefactoringContribution extends JavaUIRefactoringContr
 
 	@Override
 	public RefactoringDescriptor createDescriptor() {
-
 		return RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor();
 	}
 

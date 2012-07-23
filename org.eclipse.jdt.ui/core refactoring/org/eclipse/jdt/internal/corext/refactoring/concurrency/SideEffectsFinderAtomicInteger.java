@@ -23,7 +23,6 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	private boolean hasSideEffects;
 
 	public SideEffectsFinderAtomicInteger(IVariableBinding notIncludingField) {
-
 		this.notIncludingField= notIncludingField;
 	}
 
@@ -53,6 +52,7 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 
 	@Override
 	public boolean visit(PrefixExpression prefixExpression) {
+
 		if (!considerBinding(resolveBinding(prefixExpression.getOperand()))) {
 			hasSideEffects= true;
 		}

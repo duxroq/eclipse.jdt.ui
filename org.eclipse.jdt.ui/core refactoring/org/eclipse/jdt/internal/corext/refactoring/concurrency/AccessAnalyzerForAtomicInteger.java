@@ -8,7 +8,6 @@ import java.util.List;
 import org.eclipse.text.edits.TextEditGroup;
 
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
-import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
 
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.JavaModelException;
@@ -86,12 +85,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	public RefactoringStatus getStatus() {
-
 		return fStatus;
 	}
 
 	public Collection<TextEditGroup> getGroupDescriptions() {
-
 		return fGroupDescriptions;
 	}
 
@@ -656,23 +653,11 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 							+ ConcurrencyRefactorings.AtomicInteger_warning_side_effects4);
 				}
 			}
-			insertTodoComments(syncBody, numEntries, statement);
+//			insertTodoComments(syncBody, numEntries, statement);
 		}
 		if (numEntries < (fStatus.getEntries().length + 1)) {
 				insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
 						syncBody, enclosingStatement, Block.STATEMENTS_PROPERTY);
-		}
-	}
-
-	private void insertTodoComments(Block syncBody, int numEntries, Statement statement) {
-
-		if (numEntries < (fStatus.getEntries().length + 1)) {
-			RefactoringStatusEntry[] entries= fStatus.getEntries();
-			RefactoringStatusEntry refactoringStatusEntry= entries[(entries.length-1)];
-			if (refactoringStatusEntry.getMessage().matches(ConcurrencyRefactorings.AtomicInteger_warning_two_field_accesses)) {
-				insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_statement_not_properly_synchronized,
-						syncBody, statement, Block.STATEMENTS_PROPERTY);
-			}
 		}
 	}
 
@@ -838,7 +823,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	private void createWarningStatus(String message) {
-
 		fStatus.addWarning(message);
 	}
 

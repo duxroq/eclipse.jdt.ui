@@ -363,12 +363,10 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 
 	@Override
 	public String getName() {
-
 		return ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
 	}
 
 	public void setField(IField field) {
-
 		this.fField= field;
 	}
 
@@ -389,12 +387,10 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	}
 
 	public IField getField() {
-
 		return fField;
 	}
 
 	public String getFieldName() {
-
 		return fField.getElementName();
 	}
 

@@ -26,7 +26,6 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 	private Button initializeDeclarationButton;
 
 	public ConvertToAtomicIntegerInputPage(String name) {
-
 		super(name);
 	}
 
@@ -82,7 +81,6 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 	}
 
 	private ConvertToAtomicIntegerRefactoring getConvertToAtomicIntegerRefactoring() {
-
 		return (ConvertToAtomicIntegerRefactoring) getRefactoring();
 	}
 

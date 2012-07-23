@@ -21,17 +21,22 @@ public class AtomicIntegerRefactoringContribution extends JavaUIRefactoringContr
 	}
 
 	@Override
-	public RefactoringDescriptor createDescriptor(String id, String project, String description, String comment, Map arguments, int flags) throws IllegalArgumentException {
+	public RefactoringDescriptor createDescriptor(String id, String project,
+			String description, String comment, Map arguments, int flags) throws IllegalArgumentException {
+
 		return RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment, arguments, flags);
 	}
-	
+
 	@Override
 	public RefactoringDescriptor createDescriptor() {
+
 		return RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor();
 	}
 
 	@Override
-	public Refactoring createRefactoring(JavaRefactoringDescriptor descriptor, RefactoringStatus status) throws CoreException {
+	public Refactoring createRefactoring(JavaRefactoringDescriptor descriptor,
+			RefactoringStatus status) throws CoreException {
+
 		ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(null);
 		status.merge(refactoring.initialize(new JavaRefactoringArguments(descriptor.getProject(), retrieveArgumentMap(descriptor))));
 		return refactoring;

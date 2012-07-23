@@ -94,19 +94,19 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	private boolean initializeDeclaration;
 
 	public ConvertToAtomicIntegerRefactoring(IField field) {
-		
+
 		fChangeManager= new TextChangeManager();
 		fField= field;
 		initializeDeclaration= true;
 	}
-	
+
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public RefactoringStatus checkFinalConditions(IProgressMonitor pm)
 			throws CoreException, OperationCanceledException {
-		
+
 		RefactoringStatus result= new RefactoringStatus();
-		
+
 		fChangeManager.clear();
 		pm.beginTask(ConcurrencyRefactorings.ConcurrencyRefactorings_empty_string, 12);
 		pm.setTaskName(ConcurrencyRefactorings.AtomicIntegerRefactoring_precondition_check);
@@ -117,11 +117,11 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		pm.setTaskName(ConcurrencyRefactorings.AtomicIntegerRefactoring_searching_cunits);
 		final SubProgressMonitor subPm= new SubProgressMonitor(pm, 5);
 		ICompilationUnit[] affectedCUs= RefactoringSearchEngine.findAffectedCompilationUnits(
-			SearchPattern.createPattern(fField, IJavaSearchConstants.ALL_OCCURRENCES), 
-			RefactoringScopeFactory.create(fField, true), 
-			subPm,  
+			SearchPattern.createPattern(fField, IJavaSearchConstants.ALL_OCCURRENCES),
+			RefactoringScopeFactory.create(fField, true),
+			subPm,
 			result, true);
-		
+
 		if (result.hasFatalError()) {
 			return result;
 		}
@@ -131,9 +131,9 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		IVariableBinding fieldIdentifier= fFieldDeclarationFragment.resolveBinding();
 		List ownerDescriptions= new ArrayList();
 		ICompilationUnit owner= fField.getCompilationUnit();
-		
+
 		fImportRewrite= CodeStyleConfiguration.createImportRewrite(fRoot, true);
-		
+
 		for (int i= 0; i < affectedCUs.length; i++) {
 			ICompilationUnit unit= affectedCUs[i];
 			sub.subTask(unit.getElementName());
@@ -169,11 +169,11 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 				throw new OperationCanceledException();
 			}
 		}
-		
+
 		ownerDescriptions.addAll(addChangeDeclaringType(fRoot));
-		
+
 		createEdits(owner, fRewriter, ownerDescriptions, fImportRewrite);
-		
+
 		sub.done();
 		IFile[] filesToBeModified= ResourceUtil.getFiles(fChangeManager.getAllCompilationUnits());
 		result.merge(Checks.validateModifiesFiles(filesToBeModified, getValidationContext()));
@@ -182,24 +182,24 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		}
 		ResourceChangeChecker.checkFilesToBeChanged(filesToBeModified, new SubProgressMonitor(pm, 1));
 		return result;
-		
+
 	}
-	
+
 	private Collection<TextEditGroup> addChangeDeclaringType(CompilationUnit root) {
-		
+
 		Type newType= null;
 		newType= root.getAST().newSimpleType(ASTNodeFactory.newName(root.getAST(), ConcurrencyRefactorings.AtomicIntegerRefactoring_atomic_integer));
-		
+
 		FieldDeclaration oldFieldDeclaration= (FieldDeclaration) ASTNodes.getParent(fFieldDeclarationFragment, FieldDeclaration.class);
 		TextEditGroup gd= new TextEditGroup(ConcurrencyRefactorings.AtomicIntegerRefactoring_change_type);
-		
+
 		List<?> fragments= oldFieldDeclaration.fragments();
-		
+
 		AST ast= root.getAST();
 		VariableDeclarationFragment newVariableDeclarationFragment= ast.newVariableDeclarationFragment();
 		SimpleName newSimpleName= ast.newSimpleName(fField.getElementName());
 		newVariableDeclarationFragment.setName(newSimpleName);
-		
+
 		if (initializeDeclaration) {
 			Expression initializer= fFieldDeclarationFragment.getInitializer();
 			ClassInstanceCreation atomicInstanceCreation= root.getAST().newClassInstanceCreation();
@@ -213,25 +213,25 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 
 		FieldDeclaration newFieldDeclaration= ast.newFieldDeclaration(newVariableDeclarationFragment);
 		newFieldDeclaration.setType(newType);
-		
+
 		ModifierRewrite.create(fRewriter, newFieldDeclaration).copyAllModifiers(oldFieldDeclaration, gd);
-		
+
 		if (fragments.size() > 1) {
 			fRewriter.remove(fFieldDeclarationFragment, gd);
-			ChildListPropertyDescriptor descriptor= getBodyDeclarationsProperty(oldFieldDeclaration.getParent());	
+			ChildListPropertyDescriptor descriptor= getBodyDeclarationsProperty(oldFieldDeclaration.getParent());
 			fRewriter.getListRewrite(oldFieldDeclaration.getParent(), descriptor).insertAfter(newFieldDeclaration, oldFieldDeclaration, gd);
 		} else {
 			// case of only 1 declaration fragment
 			fRewriter.replace(oldFieldDeclaration, newFieldDeclaration, gd);
 		}
-		
+
 		ArrayList<TextEditGroup> group= new ArrayList<TextEditGroup>();
 		group.add(gd);
 		return group;
 	}
 
 	private ChildListPropertyDescriptor getBodyDeclarationsProperty(ASTNode declaration) {
-		
+
 		if (declaration instanceof AnonymousClassDeclaration) {
 			return AnonymousClassDeclaration.BODY_DECLARATIONS_PROPERTY;
 		}
@@ -241,17 +241,17 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		Assert.isTrue(false);
 		return null;
 	}
-	
+
 	private void createEdits(ICompilationUnit unit, ASTRewrite rewriter, List<?> groups, ImportRewrite importRewrite) throws CoreException {
-		
+
 		TextChange change= fChangeManager.get(unit);
 		MultiTextEdit root= new MultiTextEdit();
-		
+
 		change.setEdit(root);
 		TextEdit importEdit= importRewrite.rewriteImports(null);
 		TextChangeCompatibility.addTextEdit(fChangeManager.get(unit),
 				ConcurrencyRefactorings.ConcurrencyRefactorings_update_imports, importEdit);
-		
+
 		root.addChild(rewriter.rewriteAST());
 		for (Iterator<?> iter= groups.iterator(); iter.hasNext();) {
 			change.addTextEditGroup((TextEditGroup)iter.next());
@@ -261,16 +261,16 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	@Override
 	public RefactoringStatus checkInitialConditions(IProgressMonitor pm)
 			throws CoreException, OperationCanceledException {
-		
+
 		RefactoringStatus result=  new RefactoringStatus();
 		result.merge(Checks.checkAvailability(fField));
-		
+
 		if (result.hasFatalError()) {
 			return result;
 		}
 		fRoot= new RefactoringASTParser(AST.JLS4).parse(fField.getCompilationUnit(), true, pm);
 		ISourceRange sourceRange= fField.getNameRange();
-		
+
 		ASTNode node= NodeFinder.perform(fRoot, sourceRange.getOffset(), sourceRange.getLength());
 		if (node == null) {
 			return mappingErrorFound(result, node);
@@ -288,25 +288,25 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		fRewriter= ASTRewrite.create(fRoot.getAST());
 		return result;
 	}
-	
+
 	private RefactoringStatus mappingErrorFound(RefactoringStatus result, ASTNode node) {
-		
+
 		if ((node != null) && ((node.getFlags() & ASTNode.MALFORMED) != 0) && (processCompilerError(result, node))) {
 			return result;
 		}
 		result.addFatalError(getMappingErrorMessage());
 		return result;
 	}
-	
+
 	private String getMappingErrorMessage() {
-		
+
 		return Messages.format(
 			ConcurrencyRefactorings.AtomicIntegerRefactoring_mapping_error,
 			new String[] {fField.getElementName()});
 	}
 
 	private boolean processCompilerError(RefactoringStatus result, ASTNode node) {
-		
+
 		Message[] messages= ASTNodes.getMessages(node, ASTNodes.INCLUDE_ALL_PARENTS);
 		if (messages.length == 0) {
 			return false;
@@ -316,14 +316,14 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 			new String[] { fField.getElementName(), messages[0].getMessage()}));
 		return true;
 	}
-	
+
 	@Override
-	public Change createChange(IProgressMonitor pm) throws CoreException, 
+	public Change createChange(IProgressMonitor pm) throws CoreException,
 			OperationCanceledException {
-		
+
 		String project= null;
 		IJavaProject javaProject= fField.getJavaProject();
-		
+
 		if (javaProject != null) {
 			project= javaProject.getElementName();
 		}
@@ -340,11 +340,11 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		String description= ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
 		final JDTRefactoringDescriptorComment comment= new JDTRefactoringDescriptorComment(project, this,
 				Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_descriptor_description,
-				new String[] { JavaElementLabels.getTextLabel(fField, JavaElementLabels.ALL_FULLY_QUALIFIED), 
+				new String[] { JavaElementLabels.getTextLabel(fField, JavaElementLabels.ALL_FULLY_QUALIFIED),
 						JavaElementLabels.getTextLabel(declaring, JavaElementLabels.ALL_FULLY_QUALIFIED)}));
 		comment.addSetting(Messages.format(ConcurrencyRefactorings.AtomicIntegerRefactoring_field_pattern,
 				BasicElementLabels.getJavaElementName(fField.getElementName())));
-		
+
 		final AtomicIntegerRefactoringDescriptor descriptor= RefactoringSignatureDescriptorFactory.createAtomicIntegerRefactoringDescriptor(project, description, comment.asString(), arguments, flags);
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, fField));
 		arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, fField.getElementName());
@@ -363,10 +363,12 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 
 	@Override
 	public String getName() {
+
 		return ConcurrencyRefactorings.AtomicIntegerRefactoring_name;
 	}
 
 	public void setField(IField field) {
+
 		this.fField= field;
 	}
 
@@ -379,34 +381,36 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 		}
 		return RefactoringStatus.createInfoStatus(ConcurrencyRefactorings.AtomicIntegerRefactoring_rename_okay);
 	}
-	
+
 	public RefactoringStatus setInitializeDeclaration(boolean initializeDeclaration) {
-		
+
 		this.initializeDeclaration= initializeDeclaration;
 		return new RefactoringStatus();
 	}
 
 	public IField getField() {
+
 		return fField;
 	}
 
 	public String getFieldName() {
+
 		return fField.getElementName();
 	}
 
-	
+
 	private boolean isIgnorableProblem(IProblem problem) {
-		
+
 		if (problem.getID() == IProblem.NotVisibleField) {
 			return true;
 		}
 		return false;
 	}
-	
+
 	private void checkCompileErrors(RefactoringStatus result, CompilationUnit root, ICompilationUnit element) {
-		
+
 		IProblem[] messages= root.getProblems();
-		
+
 		for (int i= 0; i < messages.length; i++) {
 			IProblem problem= messages[i];
 			if (!isIgnorableProblem(problem)) {
@@ -427,7 +431,7 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 				return JavaRefactoringDescriptorUtil.createInputFatalStatus(element, getName(), IJavaRefactorings.ATOMIC_INTEGER);
 			else {
 				fField= (IField) element;
-				initialize(fField); 
+				initialize(fField);
 			}
 		} else {
 			return RefactoringStatus.createFatalErrorStatus(Messages.format(RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
@@ -438,6 +442,6 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 	private void initialize(IField field) {
 
 		fField= field;
-		initializeDeclaration= true;	
-	}	
+		initializeDeclaration= true;
+	}
 }

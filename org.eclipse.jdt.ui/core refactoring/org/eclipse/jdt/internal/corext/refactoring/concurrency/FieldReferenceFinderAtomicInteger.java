@@ -16,14 +16,16 @@ public class FieldReferenceFinderAtomicInteger extends ASTVisitor {
 
 	private final RefactoringStatus status;
 
-	public FieldReferenceFinderAtomicInteger(
-			RefactoringStatus status) {
-				this.status = status;
+	public FieldReferenceFinderAtomicInteger(RefactoringStatus status) {
+
+		this.status= status;
 	}
-	
+
 	@Override
 	public boolean visit(SimpleName identifier){
+
 		IBinding identifierBinding= resolveBinding(identifier);
+
 		if (identifierBinding instanceof IVariableBinding) {
 			IVariableBinding varBinding= (IVariableBinding) identifierBinding;
 			if (varBinding.isField()) {
@@ -45,9 +47,9 @@ public class FieldReferenceFinderAtomicInteger extends ASTVisitor {
 		}
 		return true;
 	}
-	
+
 	private IBinding resolveBinding(Expression expression) {
-		
+
 		if (expression instanceof SimpleName) {
 			return ((SimpleName) expression).resolveBinding();
 		} else if (expression instanceof QualifiedName) {

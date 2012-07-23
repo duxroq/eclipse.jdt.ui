@@ -9,18 +9,19 @@ import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIn
 public class ConvertToAtomicIntegerWizard extends RefactoringWizard {
 
 	public ConvertToAtomicIntegerWizard(Refactoring refactoring, int flags) {
+
 		super(refactoring, flags);
 	}
 
 	public ConvertToAtomicIntegerWizard(ConvertToAtomicIntegerRefactoring refactoring, String string) {
-		
+
 		super(refactoring, DIALOG_BASED_USER_INTERFACE | PREVIEW_EXPAND_FIRST_NODE);
 		setDefaultPageTitle(string);
 	}
 
 	@Override
 	protected void addUserInputPages() {
-		
+
 		addPage(new ConvertToAtomicIntegerInputPage(ConcurrencyRefactorings.AtomicIntegerWizard_name));
 	}
 

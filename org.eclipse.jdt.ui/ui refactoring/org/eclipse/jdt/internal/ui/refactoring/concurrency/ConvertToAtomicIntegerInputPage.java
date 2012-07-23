@@ -26,19 +26,18 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 	private Button initializeDeclarationButton;
 
 	public ConvertToAtomicIntegerInputPage(String name) {
+
 		super(name);
 	}
 
 	public void createControl(Composite parent) {
-		
+
 		Composite result= new Composite(parent, SWT.NONE);
 
 		setControl(result);
-
 		GridLayout layout= new GridLayout();
 		layout.numColumns= 2;
 		result.setLayout(layout);
-
 		Label label= new Label(result, SWT.NONE);
 		label.setText(RefactoringMessages.ConvertToAtomicIntegerInputPage_getter_name);
 
@@ -63,38 +62,38 @@ public class ConvertToAtomicIntegerInputPage extends UserInputWizardPage {
 		});
 
 		initializeDeclarationButton.setSelection(true);
-		
+
 		initializeDeclarationButton.addSelectionListener(new SelectionAdapter() {
-			
+
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				refactoring.setInitializeDeclaration(initializeDeclarationButton.getSelection());
 			}
-			
+
 		});
 	}
 
 	private Text createNameField(Composite result) {
-		
+
 		Text field= new Text(result, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-		
+
 		field.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		return field;
 	}
 
 	private ConvertToAtomicIntegerRefactoring getConvertToAtomicIntegerRefactoring() {
-		
+
 		return (ConvertToAtomicIntegerRefactoring) getRefactoring();
 	}
 
 	void handleInputChanged() {
-		
+
 		RefactoringStatus status= new RefactoringStatus();
 		ConvertToAtomicIntegerRefactoring refactoring= getConvertToAtomicIntegerRefactoring();
-		
+
 		status.merge(refactoring.setFieldName(fNameField.getText()));
 		status.merge(refactoring.setInitializeDeclaration(initializeDeclarationButton.getSelection()));
-		
+
 		setPageComplete(!status.hasError());
 		int severity= status.getSeverity();
 		String message= status.getMessageMatchingSeverity(severity);

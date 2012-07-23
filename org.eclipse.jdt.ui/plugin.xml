@@ -2644,7 +2644,7 @@
          </action>
 		<action
                definitionId="org.eclipse.jdt.ui.edit.text.java.atomic.integer"
-               label="Convert to AtomicInteger"
+               label="%Refactoring.atomicInteger.label"
                retarget="true"
                menubarPath="org.eclipse.jdt.ui.refactoring.menu/concurrencyGroup"
                id="org.eclipse.jdt.ui.actions.ConvertToAtomicInteger">
@@ -3900,8 +3900,8 @@
             id="org.eclipse.jdt.ui.edit.text.java.self.encapsulate.field">
       </command>
       <command
-            name="Convert to AtomicInteger"
-            description="Refactoring for Convert to AtomicInteger"
+            name="%ActionDefinition.atomicInteger.name"
+            description="%ActionDefinition.atomicInteger.description"
             categoryId="org.eclipse.jdt.ui.category.refactoring"
             id="org.eclipse.jdt.ui.edit.text.java.atomic.integer">
       </command>

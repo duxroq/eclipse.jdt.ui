@@ -11,7 +11,9 @@ public class TestWarningDueToMultiplicationAssignment {
 		// TODO The operations below cannot be executed atomically.
 		f.set(f.get() * 12);
 	}
-	
+
+	// TODO The statements in the method below are not properly synchronized.
+
 	public synchronized void foo() {
 		// TODO The operations below cannot be executed atomically.
 		f.set(f.get() * ((f.get()-multiply())*f.get()*j));

@@ -14,7 +14,7 @@ public class TestReturnAssignmentInSynchronizedMethod {
 
 	synchronized public int getI() {
 		i.set(12);
-		// TODO The return assignment could not be executed atomically.
+		// TODO Return statements with assignments cannot be refactored into atomic operations.
 		return i.get();
 	}
 }

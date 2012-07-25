@@ -6,8 +6,9 @@ public class TestSynchronizedMethodMultipleAccess {
 
 	AtomicInteger f = new AtomicInteger();
 
+	// TODO The statements in the method below are not properly synchronized.
+
 	synchronized void syncMultipleAccess() {
-		// TODO The statements below are not properly synchronized.
 		f.set(12);
 		f.getAndIncrement();
 	}

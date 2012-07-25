@@ -6,8 +6,9 @@ public class TestWarningDueToFieldAccessedTwiceInSynchronizedMethod {
 
 	AtomicInteger f = new AtomicInteger();
 
+	// TODO The statements in the method below are not properly synchronized.
+
 	synchronized void twoFieldsInSyncMethod() {
-		// TODO The statements below are not properly synchronized.
 		f.addAndGet(-12);
 		f.getAndIncrement();
 	}

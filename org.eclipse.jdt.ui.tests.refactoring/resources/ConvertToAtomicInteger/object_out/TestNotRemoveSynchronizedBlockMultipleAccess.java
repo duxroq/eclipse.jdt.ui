@@ -8,7 +8,7 @@ public class TestNotRemoveSynchronizedBlockMultipleAccess {
 
 	void syncMultipleAccess() {
 		synchronized(this) {
-			// TODO The statements below are not properly synchronized.
+			// TODO The statements in this block are not properly synchronized.
 			f.getAndIncrement();
 			f.getAndIncrement();
 			f.getAndIncrement();

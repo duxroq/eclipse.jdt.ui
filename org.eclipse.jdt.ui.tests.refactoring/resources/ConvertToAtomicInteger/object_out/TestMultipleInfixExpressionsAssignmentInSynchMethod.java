@@ -8,6 +8,8 @@ public class TestMultipleInfixExpressionsAssignmentInSynchMethod {
 	int a;
 	int b;
 	
+	// TODO The statements in the method below are not properly synchronized.
+
 	public synchronized void foo() {
 		// TODO The operations below cannot be executed atomically.
 		f.set(b + 12 + a);

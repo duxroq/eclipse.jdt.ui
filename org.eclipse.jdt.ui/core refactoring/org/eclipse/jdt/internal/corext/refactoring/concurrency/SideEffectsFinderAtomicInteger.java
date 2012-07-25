@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression.Operator;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
@@ -44,7 +45,14 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	@Override
 	public boolean visit(PostfixExpression postfixExpression) {
 
-		if (!considerBinding(resolveBinding(postfixExpression.getOperand()))) {
+//		if (!considerBinding(resolveBinding(postfixExpression.getOperand()))) {
+//			hasSideEffects= true;
+//		}
+//		return true;
+		Expression operand= postfixExpression.getOperand();
+		org.eclipse.jdt.core.dom.PostfixExpression.Operator operator= postfixExpression.getOperator();
+		if (!considerBinding(resolveBinding(operand)) && !(operand instanceof NumberLiteral)
+				&& ((operator == PostfixExpression.Operator.DECREMENT) || (operator == PostfixExpression.Operator.INCREMENT))) {
 			hasSideEffects= true;
 		}
 		return true;
@@ -53,7 +61,10 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	@Override
 	public boolean visit(PrefixExpression prefixExpression) {
 
-		if (!considerBinding(resolveBinding(prefixExpression.getOperand()))) {
+		Expression operand= prefixExpression.getOperand();
+		Operator operator= prefixExpression.getOperator();
+		if (!considerBinding(resolveBinding(operand)) && !(operand instanceof NumberLiteral)
+				&& ((operator == PrefixExpression.Operator.DECREMENT) || (operator == PrefixExpression.Operator.INCREMENT))) {
 			hasSideEffects= true;
 		}
 		return true;
@@ -80,8 +91,11 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 		} else if (bothAreChosenField) {
 			hasSideEffects= true;
 		} else if (oneIsChosenField) {
-			if ((!(leftOperand instanceof SimpleName) && !(leftOperand instanceof NumberLiteral))
-					|| (!(rightOperand instanceof SimpleName) && !(rightOperand instanceof NumberLiteral))) {
+			if (leftOperandIsField &&
+					!(rightOperand instanceof SimpleName) && !(rightOperand instanceof NumberLiteral)) {
+				hasSideEffects= true;
+			} else if (rightOperandIsField &&
+					!(leftOperand instanceof SimpleName) && !(leftOperand instanceof NumberLiteral)) {
 				hasSideEffects= true;
 			}
 		}

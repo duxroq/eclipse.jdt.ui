@@ -11,6 +11,8 @@ public class TestSubtract {
 		f.addAndGet(-12);
 	}
 
+	// TODO The statements in the method below are not properly synchronized.
+
 	public synchronized void foo() {
 		// TODO The operations below cannot be executed atomically.
 		f.addAndGet(-((f.get()-bar())*f.get()*j));

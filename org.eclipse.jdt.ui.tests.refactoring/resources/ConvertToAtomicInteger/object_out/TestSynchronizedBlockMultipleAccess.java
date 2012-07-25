@@ -8,7 +8,7 @@ public class TestSynchronizedBlockMultipleAccess {
 
 	void syncMultipleAccess() {
 		synchronized (this) {
-			// TODO The statements below are not properly synchronized.
+			// TODO The statements in this block are not properly synchronized.
 			f.set(12);
 			f.getAndIncrement();
 		}

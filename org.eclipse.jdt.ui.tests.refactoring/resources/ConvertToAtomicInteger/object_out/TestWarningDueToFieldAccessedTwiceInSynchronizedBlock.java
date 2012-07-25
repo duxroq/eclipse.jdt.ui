@@ -8,7 +8,7 @@ public class TestWarningDueToFieldAccessedTwiceInSynchronizedBlock {
 
 	void twoFieldsInSyncBlock() {
 		synchronized (this) {
-			// TODO The statements below are not properly synchronized.
+			// TODO The statements in this block are not properly synchronized.
 			f.addAndGet(12);
 			f.getAndIncrement();
 		}

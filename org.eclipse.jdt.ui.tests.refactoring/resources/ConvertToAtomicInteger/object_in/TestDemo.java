@@ -31,4 +31,20 @@ public class TestDemo {
 	private synchronized void add6() {
 		counter = counter + 6;
 	}
+
+	private synchronized void doubleCounter() {
+		counter = counter + counter;
+	}
+
+	private synchronized void bar() {
+		counter = (counter*3) - counter;
+	}
+
+	private synchronized void foo() {
+		counter = counter + (counter/3);
+	}
+
+	private synchronized void foo2() {
+		counter = counter + foo();
+	}
 }

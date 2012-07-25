@@ -31,4 +31,32 @@ public class TestDemo {
 	private void add6() {
 		counter.addAndGet(6);
 	}
+
+	// TODO The statements in the method below are not properly synchronized.
+
+	private synchronized void doubleCounter() {
+		// TODO The operations below cannot be executed atomically.
+		counter.addAndGet(counter.get());
+	}
+
+	// TODO The statements in the method below are not properly synchronized.
+
+	private synchronized void bar() {
+		// TODO The operations below cannot be executed atomically.
+		counter.set((counter.get()*3) - counter.get());
+	}
+
+	// TODO The statements in the method below are not properly synchronized.
+
+	private synchronized void foo() {
+		// TODO The operations below cannot be executed atomically.
+		counter.addAndGet((counter.get()/3));
+	}
+
+	// TODO The statements in the method below are not properly synchronized.
+
+	private synchronized void foo2() {
+		// TODO The operations below cannot be executed atomically.
+		counter.addAndGet(foo());
+	}
 }

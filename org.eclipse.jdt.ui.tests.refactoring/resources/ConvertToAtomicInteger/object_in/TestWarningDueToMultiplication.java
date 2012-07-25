@@ -8,11 +8,11 @@ public class TestWarningDueToMultiplication {
 	void multiply() {
 		f = f * 12;
 	}
-	
+
 	public synchronized void multiply2() {
 		f = j * bar() * 2;
 	}
-	
+
 	public synchronized void multiply3() {
 		f = (12 + j) * 2;
 	}

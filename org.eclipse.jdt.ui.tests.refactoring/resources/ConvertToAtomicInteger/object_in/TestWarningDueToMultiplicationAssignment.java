@@ -8,7 +8,7 @@ public class TestWarningDueToMultiplicationAssignment {
 	void multiply() {
 		f *= 12;
 	}
-	
+
 	public synchronized void foo() {
 		f *=(f-multiply())*f*j;
 	}

@@ -137,7 +137,6 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		performTest(fgTestSetup.getBasePackage(), getName(), "base_out", fieldName);
 	}
 
-	@SuppressWarnings("unused")
 	private void invalidTest(String fieldName) throws Exception {
 		performInvalidTest(fgTestSetup.getInvalidPackage(), getName(), fieldName);
 	}
@@ -315,7 +314,7 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("i");
 	}
 
-	//------------------------- Cases below do meet preconditions - however should throw a warning
+	//------------------------- Cases below should throw a warning
 
 	public void testWarningDueToMultiplication() throws Exception {
 		testWithWarning("f");
@@ -351,5 +350,11 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 
 	public void testReturnAssignmentInSynchronizedBlock() throws Exception {
 		testWithWarning("i");
+	}
+
+	//------------------------- Cases below do not meet preconditions - should throw an error
+
+	public void testSideEffectsOnIntFieldInAssignment() throws Exception {
+		invalidTest("i");
 	}
 }

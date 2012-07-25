@@ -73,7 +73,8 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String AtomicInteger_warning_side_effects4;
 	public static String AtomicInteger_warning_two_field_accesses;
 	public static String AtomicInteger_warning_two_field_accesses2;
-
+	public static String AtomicInteger_error_side_effects_on_int_field_in_assignment;
+	public static String AtomicInteger_error_side_effects_on_int_field_in_assignment2;
 
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, ConcurrencyRefactorings.class);

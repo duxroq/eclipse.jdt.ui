@@ -648,7 +648,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				changeFieldReferencesInExtendedOperandsToGetInvocations(infixExpression);
 			}
 		}
-		// TODO check warnings again
 		return needToVisitRHS;
 	}
 
@@ -660,6 +659,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
 					body, statement, Block.STATEMENTS_PROPERTY);
 		}
+		createWarningStatus(ConcurrencyRefactorings.AtomicInteger_warning_cannot_be_refactored_atomically);
 	}
 
 	private ListRewrite insertLineCommentBeforeNode(String comment, ASTNode body, ASTNode node, ChildListPropertyDescriptor descriptor) {
@@ -878,6 +878,12 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 						insertAtomicOpTodoComment(postfixExpression);
 					}
 				}
+			} else {
+				ASTNode statement= ASTNodes.getParent(postfixExpression, Statement.class);
+				fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
+						+ statement.toString()
+						+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
+						+ postfixExpression.toString());
 			}
 			return true;
 		}
@@ -895,6 +901,12 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 						insertAtomicOpTodoComment(prefixExpression);
 					}
 				}
+			} else {
+				ASTNode statement= ASTNodes.getParent(prefixExpression, Statement.class);
+				fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
+						+ statement.toString()
+						+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
+						+ prefixExpression.toString());
 			}
 			return true;
 		}

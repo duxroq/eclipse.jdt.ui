@@ -157,13 +157,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		PostfixExpression.Operator operator= expression.getOperator();
 
 		if (!considerBinding(resolveBinding(operand))) {
-			if ((operator == PostfixExpression.Operator.INCREMENT) || (operator == PostfixExpression.Operator.DECREMENT)) {
-				//ASTNode assignment= ASTNodes.getParent(expression, Assignment.class);
-				//if (assignment != null) {
-				System.out.println("I'm hereeeeeee");
-					insertAtomicOpTodoComment(expression);
-				//}
-			}
 			return true;
 		}
 		AST ast= expression.getAST();
@@ -190,12 +183,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		PrefixExpression.Operator operator= expression.getOperator();
 
 		if (!considerBinding(resolveBinding(operand))) {
-			if ((operator == PrefixExpression.Operator.INCREMENT) || (operator == PrefixExpression.Operator.DECREMENT)) {
-				//ASTNode assignment= ASTNodes.getParent(expression, Assignment.class);
-				//if (assignment != null) {
-					insertAtomicOpTodoComment(expression);
-				//}
-			}
 			return true;
 		}
 		AST ast= expression.getAST();
@@ -582,7 +569,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		boolean leftOperandIsChosenField= considerBinding(resolveBinding(leftOperand));
 		boolean rightOperandIsChosenField= considerBinding(resolveBinding(rightOperand));
 
-		// TODO fix TODO commentssss
 		if ((operator == InfixExpression.Operator.PLUS) || (operator == InfixExpression.Operator.MINUS)) {
 			if (leftOperandIsChosenField || rightOperandIsChosenField) {
 				if (leftOperandIsChosenField) {
@@ -889,7 +875,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				if ((operator == PostfixExpression.Operator.INCREMENT) || (operator == PostfixExpression.Operator.DECREMENT)) {
 					ASTNode assignment= ASTNodes.getParent(postfixExpression, Assignment.class);
 					if (assignment != null) {
-						System.out.println("I'm hereeeeeee");
 						insertAtomicOpTodoComment(postfixExpression);
 					}
 				}
@@ -907,7 +892,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				if ((operator == PrefixExpression.Operator.INCREMENT) || (operator == PrefixExpression.Operator.DECREMENT)) {
 					ASTNode assignment= ASTNodes.getParent(prefixExpression, Assignment.class);
 					if (assignment != null) {
-						System.out.println("I'm hereeeeeee");
 						insertAtomicOpTodoComment(prefixExpression);
 					}
 				}

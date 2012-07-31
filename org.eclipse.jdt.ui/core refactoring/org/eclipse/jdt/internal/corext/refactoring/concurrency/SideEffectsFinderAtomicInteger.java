@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NumberLiteral;
@@ -37,6 +38,13 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 
 	@Override
 	public boolean visit(MethodInvocation methodInvocation) {
+
+		hasSideEffects= true;
+		return true;
+	}
+
+	@Override
+	public boolean visit(IfStatement ifStatement) {
 
 		hasSideEffects= true;
 		return true;

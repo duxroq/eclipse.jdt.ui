@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.text.edits.TextEditGroup;
 
@@ -239,6 +240,9 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	public boolean visit(SimpleName node) {
 
 		AST ast= node.getAST();
+		AtomicInteger i= new AtomicInteger();
+
+		checkForIntConversionsToDoublesFloatsLongsOrBytes(node, ast);
 
 		if ((!node.isDeclaration()) && (considerBinding(resolveBinding(node)))) {
 			MethodInvocation invocationGet= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, node));
@@ -247,6 +251,29 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			}
 		}
 		return true;
+	}
+
+	// TODO needs to support other types of conversions, like casts
+	private void checkForIntConversionsToDoublesFloatsLongsOrBytes(SimpleName node, AST ast) {
+
+		// TODO make sure this works with synchronized methods or blocks
+		MethodInvocation methodInvocationParent= (MethodInvocation) ASTNodes.getParent(node, MethodInvocation.class);
+		if ((methodInvocationParent != null) && (methodInvocationParent.getName().toString().equals("toString"))) {
+			if (methodInvocationParent.getExpression().toString().equals("Integer")) {
+				MethodInvocation parent= (MethodInvocation) ASTNodes.getParent(methodInvocationParent, MethodInvocation.class);
+				if ((parent != null)) {
+					if ((parent.getExpression().toString().equals("Double")) && (parent.getName().toString().equals("parseDouble"))) {
+						// replace parent with new invocation
+						MethodInvocation methodInvocation= ast.newMethodInvocation();
+						methodInvocation.setName(ast.newSimpleName("doubleValue"));
+						methodInvocation.setExpression(ast.newSimpleName(node.toString()));
+						fRewriter.replace(parent, methodInvocation, createGroupDescription(COMMENT));
+					} else if ((parent.getExpression().toString().equals("Double")) && (parent.getName().toString().equals("parseDouble"))) {
+
+					}
+				}
+			}
+		}
 	}
 
 	private void changeFieldReferencesInExtendedOperandsToGetInvocations(InfixExpression infixExpression) {
@@ -323,7 +350,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return false;
 	}
 
-	// TODO byteValue, floatValue, doubleValue?
 	// TODO comments for conditional statements
 	// TODO look at the removal of synchronized tags for only if statements, for statements, etc!
 
@@ -648,22 +674,18 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		Expression rightOperand= infixExpression.getRightOperand();
 		Operator operator= infixExpression.getOperator();
 
-		//TODO maybe make these in the other handler methods?
-		Expression newLeftOperand= (Expression) fRewriter.createMoveTarget(leftOperand);
-		Expression newRightOperand= (Expression) fRewriter.createMoveTarget(rightOperand);
-
-		boolean leftOperandIsChosenField= considerBinding(resolveBinding(leftOperand));
-		boolean rightOperandIsChosenField= considerBinding(resolveBinding(rightOperand));
+		boolean leftOperandIsField= considerBinding(resolveBinding(leftOperand));
+		boolean rightOperandIsField= considerBinding(resolveBinding(rightOperand));
 
 		if ((operator == InfixExpression.Operator.PLUS) || (operator == InfixExpression.Operator.MINUS)) {
-			if (leftOperandIsChosenField || rightOperandIsChosenField) {
-				if (leftOperandIsChosenField) {
-					leftOperandOfInfixExpressionHandler(rightOperand, leftOperand, newLeftOperand, newRightOperand,
-							receiver, ast, invocation, infixExpression, node, operator);
+			if (leftOperandIsField || rightOperandIsField) {
+				if (leftOperandIsField) {
+					leftOperandOfInfixExpressionHandler(rightOperand, leftOperand, receiver, ast,
+							invocation, infixExpression, node, operator);
 					return false;
-				} else if (rightOperandIsChosenField) {
-					needToVisitRHS= rightOperandOfInfixExpressionHandler(rightOperand, leftOperand, newLeftOperand, newRightOperand,
-							receiver, ast, invocation, infixExpression, node, operator);
+				} else if (rightOperandIsField) {
+					needToVisitRHS= rightOperandOfInfixExpressionHandler(rightOperand, leftOperand, receiver, ast,
+							invocation, infixExpression, node, operator);
 					return needToVisitRHS;
 				}
 			} else if (infixExpression.hasExtendedOperands()) {
@@ -685,10 +707,13 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	private void leftOperandOfInfixExpressionHandler(Expression rightOperand, Expression leftOperand,
-			Expression newLeftOperand, Expression newRightOperand, Expression receiver, AST ast, MethodInvocation invocation,
-			InfixExpression infixExpression, Assignment node, Operator operator) {
+			Expression receiver, AST ast, MethodInvocation invocation, InfixExpression infixExpression, Assignment node,
+			Operator operator) {
 
+		Expression newLeftOperand= (Expression) fRewriter.createMoveTarget(leftOperand);
+		Expression newRightOperand= (Expression) fRewriter.createMoveTarget(rightOperand);
 		newLeftOperand= getNewOperandWithGetInvocations(ast, rightOperand, receiver);
+
 		if (infixExpression.hasExtendedOperands()) {
 			newRightOperand= getNewOperandWithGetInvocations(ast, (Expression) infixExpression.extendedOperands().get(0), receiver);
 			replaceOperandsAndChangeFieldRefsInExtOpsToGetInvocations(infixExpression, leftOperand, rightOperand, newLeftOperand, newRightOperand);
@@ -704,11 +729,14 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	private boolean rightOperandOfInfixExpressionHandler(Expression rightOperand, Expression leftOperand,
-			Expression newLeftOperand, Expression newRightOperand, Expression receiver, AST ast, MethodInvocation invocation,
-			InfixExpression infixExpression, Assignment node, Operator operator) {
+			Expression receiver, AST ast, MethodInvocation invocation, InfixExpression infixExpression, Assignment node,
+			Operator operator) {
 
+		Expression newLeftOperand= (Expression) fRewriter.createMoveTarget(leftOperand);
+		Expression newRightOperand= (Expression) fRewriter.createMoveTarget(rightOperand);
 		newLeftOperand= getNewOperandWithGetInvocations(ast, leftOperand, receiver);
 		newRightOperand= getNewOperandWithGetInvocations(ast, rightOperand, receiver);
+
 		if (infixExpression.hasExtendedOperands() && operator != InfixExpression.Operator.MINUS) {
 			newRightOperand= getNewOperandWithGetInvocations(ast, (Expression) infixExpression.extendedOperands().get(0), receiver);
 			replaceOperandsAndChangeFieldRefsInExtOpsToGetInvocations(infixExpression, leftOperand, rightOperand, newLeftOperand, newRightOperand);
@@ -774,7 +802,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	// TODO what if it is inside a for statement??
+	// TODO what if it is inside a for statement?
 	// TODO does not consistently apply todo comments
 	// TODO is there anywhere else where I need to accommodate if statements...
 	private void insertAtomicOpTodoComment(ASTNode node) {
@@ -1084,28 +1112,12 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			}
 			return false;
 		}
-
-//		public ArrayList<Expression> getArguments() throws Exception {
-//
-//			ArrayList<Expression> arguments= new ArrayList<Expression>();
-//
-//			if ((compareValue != null) && (rightHandSide != null)) {
-//				arguments.add(compareValue);
-//				arguments.add(rightHandSide);
-//				return arguments;
-//			} else {
-//				throw new Exception("Cannot retrieve appropriate arguments for compareAndSet refactoring.");
-//			}
-//		}
 	}
 
 	private class IfStatementProperties {
 
-		// TODO make these protected instead?
 		private boolean isRefactorable= true;
-
 		private ArrayList<Boolean> nodeIsRefactorableForCompareAndSet;
-
 		private ArrayList<ASTNode> nodes;
 
 		public IfStatementProperties() {
@@ -1132,10 +1144,16 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				}
 			} else {
 				ASTNode statement= ASTNodes.getParent(postfixExpression, Statement.class);
+				if (statement != null) {
 				fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
 						+ statement.toString()
 						+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
 						+ postfixExpression.toString());
+				} else {
+					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
+							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
+							+ postfixExpression.toString());
+				}
 			}
 			return true;
 		}
@@ -1155,14 +1173,41 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				}
 			} else {
 				ASTNode statement= ASTNodes.getParent(prefixExpression, Statement.class);
-				fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
-						+ statement.toString()
-						+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
-						+ prefixExpression.toString());
+				if (statement != null) {
+					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
+							+ statement.toString()
+							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
+							+ prefixExpression.toString());
+				} else {
+					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
+							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
+							+ prefixExpression.toString());
+				}
 			}
 			return true;
 		}
 
-		// TODO make a visit on assignment, see if it is in an assignment, throw an error like the ones above.  make test case!!!
+		@Override
+		public boolean visit(Assignment assignment) {
+
+			Expression leftHandSide= assignment.getLeftHandSide();
+			if (considerBinding(resolveBinding(leftHandSide))) {
+				ASTNode parent= ASTNodes.getParent(assignment, Assignment.class);
+				if (parent != null) {
+					ASTNode statement= ASTNodes.getParent(assignment, Statement.class);
+					if (statement != null) {
+					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
+							+ statement.toString()
+							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
+							+ assignment.toString());
+					} else {
+						fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
+								+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
+								+ assignment.toString());
+					}
+				}
+			}
+			return true;
+		}
 	}
 }

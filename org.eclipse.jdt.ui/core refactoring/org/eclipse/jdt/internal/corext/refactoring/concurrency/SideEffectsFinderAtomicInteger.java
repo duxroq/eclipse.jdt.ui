@@ -3,8 +3,10 @@ package org.eclipse.jdt.internal.corext.refactoring.concurrency;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.IfStatement;
@@ -18,6 +20,7 @@ import org.eclipse.jdt.core.dom.PrefixExpression.Operator;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.WhileStatement;
 
 public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 
@@ -45,6 +48,27 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 
 	@Override
 	public boolean visit(IfStatement ifStatement) {
+
+		hasSideEffects= true;
+		return false;
+	}
+
+	@Override
+	public boolean visit(ForStatement forStatement) {
+
+		hasSideEffects= true;
+		return false;
+	}
+
+	@Override
+	public boolean visit(WhileStatement whileStatement) {
+
+		hasSideEffects= true;
+		return false;
+	}
+
+	@Override
+	public boolean visit(ConditionalExpression conditionalExpression) {
 
 		hasSideEffects= true;
 		return true;

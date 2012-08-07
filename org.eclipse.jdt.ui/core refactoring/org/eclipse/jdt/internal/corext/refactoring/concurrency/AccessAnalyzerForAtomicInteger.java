@@ -85,8 +85,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private ArrayList<Block> blocksWithComments;
 	private ArrayList<Statement> visitedSynchronizedBlocks;
 	private ArrayList<MethodDeclaration> visitedSynchronizedMethods;
-
 	private ArrayList<Statement> cannotRemoveSynchronizedBlockOrModifier;
+	private ArrayList<Statement> canRemoveSynchronizedBlockOrModifier;
 
 	public AccessAnalyzerForAtomicInteger(
 			ConvertToAtomicIntegerRefactoring refactoring,
@@ -103,6 +103,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		visitedSynchronizedBlocks= new ArrayList<Statement>();
 		visitedSynchronizedMethods= new ArrayList<MethodDeclaration>();
 		cannotRemoveSynchronizedBlockOrModifier= new ArrayList<Statement>();
+		canRemoveSynchronizedBlockOrModifier= new ArrayList<Statement>();
 		try {
 			fIsFieldFinal= Flags.isFinal(refactoring.getField().getFlags());
 		} catch (JavaModelException e) {
@@ -185,8 +186,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				compoundAssignmentHandler(assignment, ast, invocation, arguments, assignment.getRightHandSide(), receiver);
 			}
 			if ((!inReturnStatement)
-					&& (!checkIfInSynchronizedBlockAndRemoveBlock(assignment, invocation, WRITE_ACCESS))
-					&& (!checkIfInSynchronizedMethodAndRemoveModifier(assignment, invocation, WRITE_ACCESS))) {
+					&& (!removedSynchronizedBlock(assignment, invocation, WRITE_ACCESS))
+					&& (!removedSynchronizedModifier(assignment, invocation, WRITE_ACCESS))) {
 
 					fRewriter.replace(assignment, invocation, createGroupDescription(WRITE_ACCESS));
 			} else if (inReturnStatement) {
@@ -223,7 +224,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		else if (operator == PostfixExpression.Operator.DECREMENT) {
 			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_getAndDecrement));
 		}
-		if (!(checkIfInSynchronizedBlockAndRemoveBlock(postfixExpression, invocation, POSTFIX_ACCESS) || checkIfInSynchronizedMethodAndRemoveModifier(postfixExpression, invocation, POSTFIX_ACCESS))) {
+		if (!(removedSynchronizedBlock(postfixExpression, invocation, POSTFIX_ACCESS) || removedSynchronizedModifier(postfixExpression, invocation, POSTFIX_ACCESS))) {
 			fRewriter.replace(postfixExpression, invocation, createGroupDescription(POSTFIX_ACCESS));
 		}
 		return false;
@@ -249,7 +250,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		else if (operator == PrefixExpression.Operator.DECREMENT) {
 			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_decrementAndGet));
 		}
-		if (!(checkIfInSynchronizedBlockAndRemoveBlock(prefixExpression, invocation, PREFIX_ACCESS) || checkIfInSynchronizedMethodAndRemoveModifier(prefixExpression, invocation, PREFIX_ACCESS))) {
+		if (!(removedSynchronizedBlock(prefixExpression, invocation, PREFIX_ACCESS) || removedSynchronizedModifier(prefixExpression, invocation, PREFIX_ACCESS))) {
 			fRewriter.replace(prefixExpression, invocation, createGroupDescription(PREFIX_ACCESS));
 		}
 		return false;
@@ -269,14 +270,14 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (replacementPair == null) {
 				accessType= READ_ACCESS;
 				invocation= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, simpleName));
-				if (!(checkIfInSynchronizedBlockAndRemoveBlock(simpleName, invocation, accessType)
-				|| checkIfInSynchronizedMethodAndRemoveModifier(simpleName, invocation, accessType))) {
+				if (!(removedSynchronizedBlock(simpleName, invocation, accessType)
+				|| removedSynchronizedModifier(simpleName, invocation, accessType))) {
 
 					fRewriter.replace(simpleName, invocation, createGroupDescription(accessType));
 				}
 			} else {
-				if (!(checkIfInSynchronizedBlockAndRemoveBlock(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType)
-				|| checkIfInSynchronizedMethodAndRemoveModifier(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType))) {
+				if (!(removedSynchronizedBlock(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType)
+				|| removedSynchronizedModifier(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType))) {
 
 					fRewriter.replace(replacementPair.whatToReplace, replacementPair.replacement, createGroupDescription(accessType));
 				}
@@ -295,6 +296,11 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				if ((parent != null)) {
 					if ((parent.getExpression().toString().equals(ConcurrencyRefactorings.Double))
 							&& (parent.getName().toString().equals(ConcurrencyRefactorings.ParseDouble))) {
+
+						Statement statement= (Statement) ASTNodes.getParent(parent, Statement.class);
+						if (statement != null) {
+							canRemoveSynchronizedBlockOrModifier.add(statement);
+						}
 						invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
 						return new ReplacementPair(parent, invocation);
 					}
@@ -349,7 +355,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	private boolean checkIfInSynchronizedBlockAndRemoveBlock(ASTNode node, Expression invocation, String accessType) {
+	// TODO more than 1 field reference
+	private boolean removedSynchronizedBlock(ASTNode node, Expression invocation, String accessType) {
 
 		AST ast= node.getAST();
 		Statement statement= (Statement) ASTNodes.getParent(node, Statement.class);
@@ -363,21 +370,23 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				Statement firstStatement= (Statement) syncBodyStatements.get(0);
 				if (syncBodyStatements.size() > 1) {
 					insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
-					fRewriter.replace(node, invocation, createGroupDescription(accessType));
 					checkMoreThanOneFieldReference(node, syncBody);
+					return false;
 				} else {
-					if ((!sideEffectsFinder.hasSideEffects(firstStatement))
-							&& (ASTMatcher.safeEquals(statement, firstStatement))
-							&& ((!cannotRemoveSynchronizedBlockOrModifier.contains(firstStatement)))) {
+					if ((ASTMatcher.safeEquals(statement, firstStatement))
+							&& (canRemoveSynchBlockOrModifier(firstStatement))) {
 
 						ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
-						fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
+						fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(accessType));
+//						fRewriter.replace(syncStatement, statement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
+//						fRewriter.replace(node, invocation, createGroupDescription(accessType));
+						return true;
 					} else if (sideEffectsFinder.hasSideEffects(firstStatement)) {
 						insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
+						checkMoreThanOneFieldReference(node, syncBody);
 						return false;
 					}
 				}
-				return true;
 			}
 		}
 		return false;
@@ -393,7 +402,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	private boolean checkIfInSynchronizedMethodAndRemoveModifier(ASTNode node, Expression invocation, String accessType) {
+	private boolean removedSynchronizedModifier(ASTNode node, Expression invocation, String accessType) {
 
 		Statement statement= (Statement) ASTNodes.getParent(node, Statement.class);
 		MethodDeclaration methodDecl= (MethodDeclaration) ASTNodes.getParent(node, MethodDeclaration.class);
@@ -406,29 +415,38 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					List<Statement> methodBodyStatements= methodDecl.getBody().statements();
 					Statement firstStatement= methodBodyStatements.get(0);
 					if (methodBodyStatements.size() == 1) {
-						if ((!sideEffectsFinder.hasSideEffects(firstStatement))
-								&& (ASTMatcher.safeEquals(statement, firstStatement))
-								&& (!cannotRemoveSynchronizedBlockOrModifier.contains(firstStatement))) {
+						if ((ASTMatcher.safeEquals(statement, firstStatement))
+								&& (canRemoveSynchBlockOrModifier(firstStatement))) {
 
 							removeSynchronizedModifier(methodDecl, modifiers);
+							fRewriter.replace(node, invocation, createGroupDescription(accessType));
+							return true;
 						} else if ((sideEffectsFinder.hasSideEffects(firstStatement))
 								&& !(statementIsRefactorableIntoCompareAndSet(firstStatement))) {
 
 							insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
+							checkMoreThanOneFieldReference(node, methodDecl.getBody());
+							return false;
 						}
 					} else {
 						insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
 						checkMoreThanOneFieldReference(node, methodDecl.getBody());
+						return false;
 					}
-					fRewriter.replace(node, invocation, createGroupDescription(accessType));
-					return true;
 				}
 			}
 		}
 		return false;
 	}
 
+	private boolean canRemoveSynchBlockOrModifier(Statement statement) {
+
+		return (!cannotRemoveSynchronizedBlockOrModifier.contains(statement))
+				&& ((canRemoveSynchronizedBlockOrModifier.contains(statement) || !sideEffectsFinder.hasSideEffects(statement)));
+	}
+
 	private boolean statementIsRefactorableIntoCompareAndSet(Statement statement) {
+
 		if (statement instanceof IfStatement) {
 			if (ifStatementsToNodes.containsKey(statement)) {
 				IfStatementProperties properties= ifStatementsToNodes.get(statement);

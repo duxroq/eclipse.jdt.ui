@@ -93,10 +93,6 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	@Override
 	public boolean visit(PostfixExpression postfixExpression) {
 
-//		if (!considerBinding(resolveBinding(postfixExpression.getOperand()))) {
-//			hasSideEffects= true;
-//		}
-//		return true;
 		Expression operand= postfixExpression.getOperand();
 		org.eclipse.jdt.core.dom.PostfixExpression.Operator operator= postfixExpression.getOperator();
 		if (!considerBinding(resolveBinding(operand)) && !(operand instanceof NumberLiteral)
@@ -151,8 +147,6 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 			hasSideEffects= true;
 		}
 		return true;
-
-
 	}
 
 	@Override

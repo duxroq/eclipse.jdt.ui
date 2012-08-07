@@ -71,7 +71,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private static final String REPLACE_TYPE_CONVERSION= ConcurrencyRefactorings.AtomicIntegerRefactoring_replace_type_conversion;
 	private static final String COMMENT= ConcurrencyRefactorings.ConcurrencyRefactorings_comment;
 
-	// TODO externalize strings
+	// TODO move precondition checking to a different class
 
 	private IVariableBinding fFieldBinding;
 	private ASTRewrite fRewriter;
@@ -83,6 +83,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private HashMap<IfStatement, IfStatementProperties> ifStatementsToNodes;
 	private ArrayList<MethodDeclaration> methodsWithComments;
 	private ArrayList<Block> blocksWithComments;
+	private ArrayList<Statement> visitedSynchronizedBlocks;
+	private ArrayList<MethodDeclaration> visitedSynchronizedMethods;
+
+	private ArrayList<Statement> cannotRemoveSynchronizedBlockOrModifier;
 
 	public AccessAnalyzerForAtomicInteger(
 			ConvertToAtomicIntegerRefactoring refactoring,
@@ -96,6 +100,9 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		sideEffectsFinder= new SideEffectsFinderAtomicInteger(fFieldBinding);
 		methodsWithComments= new ArrayList<MethodDeclaration>();
 		blocksWithComments= new ArrayList<Block>();
+		visitedSynchronizedBlocks= new ArrayList<Statement>();
+		visitedSynchronizedMethods= new ArrayList<MethodDeclaration>();
+		cannotRemoveSynchronizedBlockOrModifier= new ArrayList<Statement>();
 		try {
 			fIsFieldFinal= Flags.isFinal(refactoring.getField().getFlags());
 		} catch (JavaModelException e) {
@@ -136,23 +143,25 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	@Override
-	public boolean visit(Assignment node) {
+	public boolean visit(Assignment assignment) {
 
+		// TODO rename needToVisitRHS
 		boolean needToVisitRHS= true;
 		boolean inReturnStatement= false;
-		Expression lhs= node.getLeftHandSide();
-		checkIfNodeIsInIfStatement(node);
+		Expression lhs= assignment.getLeftHandSide();
+		checkIfNodeIsInIfStatement(assignment);
 
 		if (!considerBinding(resolveBinding(lhs))) {
 			return true;
 		}
-		ASTNode statement= ASTNodes.getParent(node, Statement.class);
-		if ((!checkParent(node)) && (statement instanceof ReturnStatement)) {
-				inReturnStatement= true;
+		Statement statement= (Statement) ASTNodes.getParent(assignment, Statement.class);
+		if ((!checkParent(assignment)) && (statement instanceof ReturnStatement)) {
+			cannotRemoveSynchronizedBlockOrModifier.add(statement);
+			inReturnStatement= true;
 		}
 		if (!fIsFieldFinal) {
 
-			AST ast= node.getAST();
+			AST ast= assignment.getAST();
 			MethodInvocation invocation= ast.newMethodInvocation();
 			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_set));
 			Expression receiver= getReceiver(lhs);
@@ -161,28 +170,27 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				invocation.setExpression((Expression) ASTNode.copySubtree(ast, receiver));
 			}
 			List<Expression> arguments= invocation.arguments();
-			if (node.getOperator() == Assignment.Operator.ASSIGN) {
-				Expression rightHandSide= node.getRightHandSide();
+			if (assignment.getOperator() == Assignment.Operator.ASSIGN) {
+				Expression rightHandSide= assignment.getRightHandSide();
 				if (rightHandSide instanceof InfixExpression) {
-					needToVisitRHS= infixExpressionHandler(node, ast, invocation, rightHandSide, receiver);
+					needToVisitRHS= infixExpressionHandler(assignment, ast, invocation, rightHandSide, receiver);
 				}
 				if (needToVisitRHS) {
-					node.getRightHandSide().accept(new ChangeFieldToGetInvocationVisitor());
-					node.getRightHandSide().accept(new SideEffectsInAssignmentFinderAndCommenter());
+					assignment.getRightHandSide().accept(new ChangeFieldToGetInvocationVisitor());
+					assignment.getRightHandSide().accept(new SideEffectsInAssignmentFinderAndCommenter());
 					arguments.add((Expression) fRewriter.createMoveTarget(rightHandSide));
 				}
 			}
-			if (node.getOperator() != Assignment.Operator.ASSIGN) {
-				compoundAssignmentHandler(node, ast, invocation, arguments, node.getRightHandSide(), receiver);
+			if (assignment.getOperator() != Assignment.Operator.ASSIGN) {
+				compoundAssignmentHandler(assignment, ast, invocation, arguments, assignment.getRightHandSide(), receiver);
 			}
-			System.out.println("Visiting on a ASSIGNMENT :: " + node.toString());
 			if ((!inReturnStatement)
-					&& (!checkIfInSynchronizedBlockAndRemoveBlock(node, invocation, WRITE_ACCESS))
-					&& (!checkIfInSynchronizedMethodAndRemoveModifier(node, invocation, WRITE_ACCESS))) {
+					&& (!checkIfInSynchronizedBlockAndRemoveBlock(assignment, invocation, WRITE_ACCESS))
+					&& (!checkIfInSynchronizedMethodAndRemoveModifier(assignment, invocation, WRITE_ACCESS))) {
 
-					fRewriter.replace(node, invocation, createGroupDescription(WRITE_ACCESS));
+					fRewriter.replace(assignment, invocation, createGroupDescription(WRITE_ACCESS));
 			} else if (inReturnStatement) {
-				refactorReturnAtomicIntegerAssignment(node, (Statement) statement, invocation, receiver);
+				refactorReturnAtomicIntegerAssignment(assignment, statement, invocation, receiver);
 			}
 		}
 		return false;
@@ -196,15 +204,15 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	@Override
-	public boolean visit(PostfixExpression expression) {
+	public boolean visit(PostfixExpression postfixExpression) {
 
-		Expression operand= expression.getOperand();
-		PostfixExpression.Operator operator= expression.getOperator();
+		Expression operand= postfixExpression.getOperand();
+		PostfixExpression.Operator operator= postfixExpression.getOperator();
 
 		if (!considerBinding(resolveBinding(operand))) {
 			return true;
 		}
-		AST ast= expression.getAST();
+		AST ast= postfixExpression.getAST();
 		MethodInvocation invocation= ast.newMethodInvocation();
 
 		invocation.setExpression((Expression) fRewriter.createCopyTarget(operand));
@@ -215,23 +223,22 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		else if (operator == PostfixExpression.Operator.DECREMENT) {
 			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_getAndDecrement));
 		}
-		System.out.println("Visiting on a POSTFIX :: " + expression.toString());
-		if (!(checkIfInSynchronizedBlockAndRemoveBlock(expression, invocation, POSTFIX_ACCESS) || checkIfInSynchronizedMethodAndRemoveModifier(expression, invocation, POSTFIX_ACCESS))) {
-			fRewriter.replace(expression, invocation, createGroupDescription(POSTFIX_ACCESS));
+		if (!(checkIfInSynchronizedBlockAndRemoveBlock(postfixExpression, invocation, POSTFIX_ACCESS) || checkIfInSynchronizedMethodAndRemoveModifier(postfixExpression, invocation, POSTFIX_ACCESS))) {
+			fRewriter.replace(postfixExpression, invocation, createGroupDescription(POSTFIX_ACCESS));
 		}
 		return false;
 	}
 
 	@Override
-	public boolean visit(PrefixExpression expression) {
+	public boolean visit(PrefixExpression prefixExpression) {
 
-		Expression operand= expression.getOperand();
-		PrefixExpression.Operator operator= expression.getOperator();
+		Expression operand= prefixExpression.getOperand();
+		PrefixExpression.Operator operator= prefixExpression.getOperator();
 
 		if (!considerBinding(resolveBinding(operand))) {
 			return true;
 		}
-		AST ast= expression.getAST();
+		AST ast= prefixExpression.getAST();
 		MethodInvocation invocation= ast.newMethodInvocation();
 
 		invocation.setExpression((Expression) fRewriter.createCopyTarget(operand));
@@ -242,53 +249,59 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		else if (operator == PrefixExpression.Operator.DECREMENT) {
 			invocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_decrementAndGet));
 		}
-		System.out.println("Visiting on a PREFIX");
-		if (!(checkIfInSynchronizedBlockAndRemoveBlock(expression, invocation, PREFIX_ACCESS) || checkIfInSynchronizedMethodAndRemoveModifier(expression, invocation, PREFIX_ACCESS))) {
-			fRewriter.replace(expression, invocation, createGroupDescription(PREFIX_ACCESS));
+		if (!(checkIfInSynchronizedBlockAndRemoveBlock(prefixExpression, invocation, PREFIX_ACCESS) || checkIfInSynchronizedMethodAndRemoveModifier(prefixExpression, invocation, PREFIX_ACCESS))) {
+			fRewriter.replace(prefixExpression, invocation, createGroupDescription(PREFIX_ACCESS));
 		}
 		return false;
 	}
 
 	@Override
-	public boolean visit(SimpleName node) {
-
-		AST ast= node.getAST();
-		if (checkForTypeConversionsAndReplace(node, ast)) {
-			return true;
-		}
+	public boolean visit(SimpleName simpleName) {
 
 		// TODO
-		//boolean inTypeConversion= checkForTypeConversionsAndReplace(node, ast);
+		AST ast= simpleName.getAST();
+		ReplacementPair replacementPair= null;
+		String accessType= REPLACE_TYPE_CONVERSION;
+		MethodInvocation invocation= ast.newMethodInvocation();
+		replacementPair= checkForTypeConversionsAndReplace(simpleName, invocation, ast);
 
-		if ((!node.isDeclaration()) && (considerBinding(resolveBinding(node)))) {
-			MethodInvocation invocationGet= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, node));
-			System.out.println("Visiting on a SIMPLENAME");
-			//if (!inTypeConversion) {
-			if (!(checkIfInSynchronizedBlockAndRemoveBlock(node, invocationGet, READ_ACCESS) || checkIfInSynchronizedMethodAndRemoveModifier(node, invocationGet, READ_ACCESS))) {
-				fRewriter.replace(node, invocationGet, createGroupDescription(READ_ACCESS));
+		if ((!simpleName.isDeclaration()) && (considerBinding(resolveBinding(simpleName)))) {
+			if (replacementPair == null) {
+				accessType= READ_ACCESS;
+				invocation= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, simpleName));
+				if (!(checkIfInSynchronizedBlockAndRemoveBlock(simpleName, invocation, accessType)
+				|| checkIfInSynchronizedMethodAndRemoveModifier(simpleName, invocation, accessType))) {
+
+					fRewriter.replace(simpleName, invocation, createGroupDescription(accessType));
+				}
+			} else {
+				if (!(checkIfInSynchronizedBlockAndRemoveBlock(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType)
+				|| checkIfInSynchronizedMethodAndRemoveModifier(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType))) {
+
+					fRewriter.replace(replacementPair.whatToReplace, replacementPair.replacement, createGroupDescription(accessType));
+				}
 			}
-			//} else {
-
-			//}
 		}
 		return true;
 	}
 
-	private boolean checkForTypeConversionsAndReplace(SimpleName node, AST ast) {
+	private ReplacementPair checkForTypeConversionsAndReplace(SimpleName simpleName, MethodInvocation invocation, AST ast) {
 
-		MethodInvocation methodInvocationParent= (MethodInvocation) ASTNodes.getParent(node, MethodInvocation.class);
+		MethodInvocation methodInvocationParent= (MethodInvocation) ASTNodes.getParent(simpleName, MethodInvocation.class);
+
 		if ((methodInvocationParent != null) && (methodInvocationParent.getName().toString().equals(ConcurrencyRefactorings.ToString))) {
 			if (methodInvocationParent.getExpression().toString().equals(ConcurrencyRefactorings.Integer)) {
 				MethodInvocation parent= (MethodInvocation) ASTNodes.getParent(methodInvocationParent, MethodInvocation.class);
 				if ((parent != null)) {
-					if ((parent.getExpression().toString().equals(ConcurrencyRefactorings.Double)) && (parent.getName().toString().equals(ConcurrencyRefactorings.ParseDouble))) {
-						replaceTypeConversion(parent, ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
-						return true;
+					if ((parent.getExpression().toString().equals(ConcurrencyRefactorings.Double))
+							&& (parent.getName().toString().equals(ConcurrencyRefactorings.ParseDouble))) {
+						invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
+						return new ReplacementPair(parent, invocation);
 					}
 				}
 			}
 		}
-		ASTNode castExpression= ASTNodes.getParent(node, CastExpression.class);
+		ASTNode castExpression= ASTNodes.getParent(simpleName, CastExpression.class);
 		if (castExpression != null) {
 			Type type= ((CastExpression) castExpression).getType();
 			ASTNode parenthesizedExpression= ASTNodes.getParent(castExpression, ParenthesizedExpression.class);
@@ -299,30 +312,30 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (type instanceof PrimitiveType) {
 				Code primitiveTypeCode= ((PrimitiveType) type).getPrimitiveTypeCode();
 				if (primitiveTypeCode.equals(PrimitiveType.DOUBLE)) {
-					replaceTypeConversion(expression, ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
+					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.BYTE)) {
-					replaceTypeConversion(expression, ast, ConcurrencyRefactorings.AtomicInteger_byteValue);
+					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_byteValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.FLOAT)) {
-					replaceTypeConversion(expression, ast, ConcurrencyRefactorings.AtomicInteger_floatValue);
+					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_floatValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.SHORT)) {
-					replaceTypeConversion(expression, ast, ConcurrencyRefactorings.AtomicInteger_shortValue);
+					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_shortValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.LONG)) {
-					replaceTypeConversion(expression, ast, ConcurrencyRefactorings.AtomicInteger_longValue);
+					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_longValue);
 				} else {
-					return false;
+					return null;
 				}
-				return true;
+				return new ReplacementPair(expression, invocation);
 			}
 		}
-		return false;
+		return null;
 	}
 
-	private void replaceTypeConversion(ASTNode node, AST ast, String invocationName) {
+	private MethodInvocation replaceTypeConversion(AST ast, String invocationName) {
 
 		MethodInvocation methodInvocation= ast.newMethodInvocation();
 		methodInvocation.setName(ast.newSimpleName(invocationName));
 		methodInvocation.setExpression(ast.newSimpleName(fFieldBinding.getName()));
-		fRewriter.replace(node, methodInvocation, createGroupDescription(REPLACE_TYPE_CONVERSION));
+		return methodInvocation;
 	}
 
 	private void changeFieldReferencesInExtendedOperandsToGetInvocations(InfixExpression infixExpression) {
@@ -340,32 +353,32 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 		AST ast= node.getAST();
 		Statement statement= (Statement) ASTNodes.getParent(node, Statement.class);
-		ASTNode syncStatement= ASTNodes.getParent(node, SynchronizedStatement.class);
+		Statement syncStatement= (Statement) ASTNodes.getParent(node, SynchronizedStatement.class);
 
 		if (syncStatement != null) {
-			Block syncBody= ((SynchronizedStatement) syncStatement).getBody();
-			List<?> syncBodyStatements= syncBody.statements();
-			Statement firstStatement= (Statement) syncBodyStatements.get(0);
-			if (syncBodyStatements.size() > 1) {
-				insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
-				fRewriter.replace(node, invocation, createGroupDescription(accessType));
-				checkMoreThanOneFieldReference(node, syncBody);
-			} else {
-				ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
-				if ((!isReturnStatementWithIntFieldAssignment(firstStatement)) && (!sideEffectsFinder.hasSideEffects(firstStatement)) && (ASTMatcher.safeEquals(statement, firstStatement))) {
-					fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
-				} else if (sideEffectsFinder.hasSideEffects(firstStatement)) {
-
+			if (!visitedSynchronizedBlocks.contains(syncStatement)) {
+				visitedSynchronizedBlocks.add(syncStatement);
+				Block syncBody= ((SynchronizedStatement) syncStatement).getBody();
+				List<?> syncBodyStatements= syncBody.statements();
+				Statement firstStatement= (Statement) syncBodyStatements.get(0);
+				if (syncBodyStatements.size() > 1) {
 					insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
-					if (!(node instanceof SimpleName)) {
-						fRewriter.replace(statement, newExpressionStatement, createGroupDescription(accessType));
-					} else {
+					fRewriter.replace(node, invocation, createGroupDescription(accessType));
+					checkMoreThanOneFieldReference(node, syncBody);
+				} else {
+					if ((!sideEffectsFinder.hasSideEffects(firstStatement))
+							&& (ASTMatcher.safeEquals(statement, firstStatement))
+							&& ((!cannotRemoveSynchronizedBlockOrModifier.contains(firstStatement)))) {
+
+						ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
+						fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
+					} else if (sideEffectsFinder.hasSideEffects(firstStatement)) {
+						insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
 						return false;
 					}
 				}
+				return true;
 			}
-
-			return true;
 		}
 		return false;
 	}
@@ -384,26 +397,32 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 		Statement statement= (Statement) ASTNodes.getParent(node, Statement.class);
 		MethodDeclaration methodDecl= (MethodDeclaration) ASTNodes.getParent(node, MethodDeclaration.class);
-		if (methodDecl != null) {
-			int modifiers= methodDecl.getModifiers();
 
-			if (Modifier.isSynchronized(modifiers)) {
-				List<Statement> methodBodyStatements= methodDecl.getBody().statements();
-				Statement firstStatement= methodBodyStatements.get(0);
-				if (methodBodyStatements.size() == 1) {
-					if ((!isReturnStatementWithIntFieldAssignment(statement)) && (!sideEffectsFinder.hasSideEffects(statement)) && (ASTMatcher.safeEquals(statement, firstStatement))) {
-						removeSynchronizedModifier(methodDecl, modifiers);
-					} else if ((sideEffectsFinder.hasSideEffects(statement)) && !(statementIsRefactorableIntoCompareAndSet(statement)) /*&& (ASTMatcher.safeEquals(statement, firstStatement))*/) {
-						insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
-					}
-				} else {
-					if (!isReturnStatementWithIntFieldAssignment(statement)) {
+		if (methodDecl != null) {
+			if (!visitedSynchronizedMethods.contains(methodDecl)) {
+				visitedSynchronizedMethods.add(methodDecl);
+				int modifiers= methodDecl.getModifiers();
+				if (Modifier.isSynchronized(modifiers)) {
+					List<Statement> methodBodyStatements= methodDecl.getBody().statements();
+					Statement firstStatement= methodBodyStatements.get(0);
+					if (methodBodyStatements.size() == 1) {
+						if ((!sideEffectsFinder.hasSideEffects(firstStatement))
+								&& (ASTMatcher.safeEquals(statement, firstStatement))
+								&& (!cannotRemoveSynchronizedBlockOrModifier.contains(firstStatement))) {
+
+							removeSynchronizedModifier(methodDecl, modifiers);
+						} else if ((sideEffectsFinder.hasSideEffects(firstStatement))
+								&& !(statementIsRefactorableIntoCompareAndSet(firstStatement))) {
+
+							insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
+						}
+					} else {
 						insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
 						checkMoreThanOneFieldReference(node, methodDecl.getBody());
 					}
+					fRewriter.replace(node, invocation, createGroupDescription(accessType));
+					return true;
 				}
-				fRewriter.replace(node, invocation, createGroupDescription(accessType));
-				return true;
 			}
 		}
 		return false;
@@ -1046,26 +1065,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	private boolean isReturnStatementWithIntFieldAssignment(Statement statement) {
-
-		if (statement instanceof ReturnStatement) {
-			Expression expression= ((ReturnStatement)statement).getExpression();
-			if (expression instanceof Assignment) {
-				Expression leftHandSide = ((Assignment) expression).getLeftHandSide();
-				if (leftHandSide instanceof SimpleName) {
-					IBinding identifierBinding= resolveBinding(leftHandSide);
-					if (identifierBinding instanceof IVariableBinding) {
-						IVariableBinding varBinding= (IVariableBinding) identifierBinding;
-						if (varBinding.isField() && considerBinding(identifierBinding)) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
-	}
-
 	private boolean needsParentheses(Expression expression) {
 
 		int type= expression.getNodeType();
@@ -1344,6 +1343,16 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 		public enum Location {
 			EXPRESSION, THEN_STATEMENT, ELSE_STATEMENT
+		}
+	}
+
+	private class ReplacementPair {
+		private ASTNode whatToReplace;
+		private ASTNode replacement;
+
+		public ReplacementPair(ASTNode whatToReplace, ASTNode replacement) {
+			this.whatToReplace= whatToReplace;
+			this.replacement= replacement;
 		}
 	}
 

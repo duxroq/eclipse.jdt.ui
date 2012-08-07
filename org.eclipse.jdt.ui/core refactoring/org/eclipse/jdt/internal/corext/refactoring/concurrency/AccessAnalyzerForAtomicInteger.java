@@ -259,7 +259,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	@Override
 	public boolean visit(SimpleName simpleName) {
 
-		// TODO
 		AST ast= simpleName.getAST();
 		ReplacementPair replacementPair= null;
 		String accessType= REPLACE_TYPE_CONVERSION;
@@ -355,7 +354,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	// TODO more than 1 field reference
+	// TODO more than 1 field reference?
 	private boolean removedSynchronizedBlock(ASTNode node, Expression invocation, String accessType) {
 
 		AST ast= node.getAST();
@@ -376,10 +375,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					if ((ASTMatcher.safeEquals(statement, firstStatement))
 							&& (canRemoveSynchBlockOrModifier(firstStatement))) {
 
-						ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
-						fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(accessType));
-//						fRewriter.replace(syncStatement, statement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
-//						fRewriter.replace(node, invocation, createGroupDescription(accessType));
+						removeSynchronizedBlock(node, invocation, accessType, ast, statement, syncStatement);
 						return true;
 					} else if (sideEffectsFinder.hasSideEffects(firstStatement)) {
 						insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
@@ -390,6 +386,20 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			}
 		}
 		return false;
+	}
+
+	private void removeSynchronizedBlock(ASTNode node, Expression invocation, String accessType, AST ast, Statement statement, Statement syncStatement) {
+
+		if (statement instanceof ExpressionStatement) {
+			ExpressionStatement newExpressionStatement= ast.newExpressionStatement(invocation);
+			fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
+		} else if (statement instanceof ReturnStatement) {
+			ReturnStatement newReturnStatement= ast.newReturnStatement();
+			newReturnStatement.setExpression(invocation);
+			fRewriter.replace(syncStatement, newReturnStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
+		} else {
+			fRewriter.replace(node, invocation, createGroupDescription(accessType));
+		}
 	}
 
 	private void insertStatementsInBlockAreNotSynchronizedComment(Block syncBody, Statement firstStatement) {

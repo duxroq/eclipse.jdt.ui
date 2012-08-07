@@ -4,6 +4,8 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.DoStatement;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.ForStatement;
@@ -61,7 +63,21 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	}
 
 	@Override
+	public boolean visit(EnhancedForStatement enhancedForStatement) {
+
+		hasSideEffects= true;
+		return false;
+	}
+
+	@Override
 	public boolean visit(WhileStatement whileStatement) {
+
+		hasSideEffects= true;
+		return false;
+	}
+
+	@Override
+	public boolean visit(DoStatement doStatement) {
 
 		hasSideEffects= true;
 		return false;

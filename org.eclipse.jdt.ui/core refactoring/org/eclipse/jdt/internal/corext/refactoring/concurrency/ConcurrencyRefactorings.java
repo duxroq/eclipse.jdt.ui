@@ -30,7 +30,14 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String ConcurrencyRefactorings_comment;
 	public static String ConcurrencyRefactorings_read_and_write_access;
 
+	public static String Double;
+	public static String ToString;
+	public static String ParseDouble;
+	public static String Integer;
+
 	public static String AtomicIntegerRefactoring_replace_if_statement_with_compare_and_set;
+
+	public static String AtomicIntegerRefactoring_replace_type_conversion;
 	public static String AtomicIntegerRefactoring_import;
 	public static String AtomicIntegerRefactoring_descriptor_description;
 	public static String AtomicIntegerRefactoring_field_pattern;
@@ -53,7 +60,11 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String AtomicInteger_incrementAndGet;
 	public static String AtomicInteger_decrementAndGet;
 	public static String AtomicInteger_addAndGet;
-
+	public static String AtomicInteger_doubleValue;
+	public static String AtomicInteger_shortValue;
+	public static String AtomicInteger_longValue;
+	public static String AtomicInteger_floatValue;
+	public static String AtomicInteger_byteValue;
 	public static String AtomicInteger_compareAndSet;
 	public static String AtomicInteger_todo_comment_op_cannot_be_executed_atomically;
 	public static String AtomicInteger_todo_comment_op_cannot_be_executed_atomically_nl;

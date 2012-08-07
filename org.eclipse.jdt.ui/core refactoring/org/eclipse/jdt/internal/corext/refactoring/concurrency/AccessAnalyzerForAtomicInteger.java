@@ -82,9 +82,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private RefactoringStatus fStatus;
 	private SideEffectsFinderAtomicInteger sideEffectsFinder;
 	private HashMap<IfStatement, IfStatementProperties> ifStatementsToNodes;
-
 	private ArrayList<MethodDeclaration> methodsWithComments;
-
 	private ArrayList<Block> blocksWithComments;
 
 	public AccessAnalyzerForAtomicInteger(
@@ -387,41 +385,22 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 	private boolean checkIfInSynchronizedMethodAndRemoveModifier(ASTNode node, Expression invocation, String accessType) {
 
-		System.out.println("CHECK SYNCHrONIZED METHOD");
-
 		Statement statement= (Statement) ASTNodes.getParent(node, Statement.class);
 		MethodDeclaration methodDecl= (MethodDeclaration) ASTNodes.getParent(node, MethodDeclaration.class);
 		if (methodDecl != null) {
 			int modifiers= methodDecl.getModifiers();
 
 			if (Modifier.isSynchronized(modifiers)) {
-				System.out.println("The method is synchronized.");
 				List<Statement> methodBodyStatements= methodDecl.getBody().statements();
 				Statement firstStatement= methodBodyStatements.get(0);
 				if (methodBodyStatements.size() == 1) {
-					System.out.println("There is 1 method body statement");
-
-					if (sideEffectsFinder.hasSideEffects(firstStatement)) {
-						System.out.println("Hey, there are side effects in this firststatement");
-					}
-					if (!statementIsRefactorableIntoCompareAndSet(statement)) {
-						System.out.println("Hey, this statement is not refactorable into compare and set");
-					}
-					System.out.println("The first statement is ::: " + firstStatement.toString());
-					System.out.println("The statement is ::: " + statement.toString());
 					if ((!isReturnStatementWithIntFieldAssignment(statement)) && (!sideEffectsFinder.hasSideEffects(statement)) && (ASTMatcher.safeEquals(statement, firstStatement))) {
-						System.out.println("Not a return assignment, statement has no side effects, statement and first statement are equal");
-
 						removeSynchronizedModifier(methodDecl, modifiers);
 					} else if ((sideEffectsFinder.hasSideEffects(statement)) && !(statementIsRefactorableIntoCompareAndSet(statement)) /*&& (ASTMatcher.safeEquals(statement, firstStatement))*/) {
-						System.out.println("The statement has side effects, not refactorable into compare and set, statement and forstStatement are equal");
-
 						insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
 					}
 				} else {
 					if (!isReturnStatementWithIntFieldAssignment(statement)) {
-						System.out.println("More than 1 method body statement, not a return assignment");
-
 						insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
 						checkMoreThanOneFieldReference(node, methodDecl.getBody());
 					}

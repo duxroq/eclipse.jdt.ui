@@ -67,7 +67,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private static final String PREFIX_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_prefix_access;
 	private static final String REMOVE_SYNCHRONIZED_MODIFIER= ConcurrencyRefactorings.ConcurrencyRefactorings_remove_synch_mod;
 	private static final String REMOVE_SYNCHRONIZED_BLOCK= ConcurrencyRefactorings.ConcurrencyRefactorings_remove_synch_block;
-	private static final String READ_AND_WRITE_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_read_and_write_access;
 	private static final String REPLACE_IF_STATEMENT_WITH_COMPARE_AND_SET= ConcurrencyRefactorings.AtomicIntegerRefactoring_replace_if_statement_with_compare_and_set;
 	private static final String REPLACE_TYPE_CONVERSION= ConcurrencyRefactorings.AtomicIntegerRefactoring_replace_type_conversion;
 	private static final String COMMENT= ConcurrencyRefactorings.ConcurrencyRefactorings_comment;
@@ -348,7 +347,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			List<?> syncBodyStatements= syncBody.statements();
 			Statement firstStatement= (Statement) syncBodyStatements.get(0);
 			if (syncBodyStatements.size() > 1) {
-				insertStatementsInBlockAreNotSynchronizedComment(statement, syncBody, firstStatement);
+				insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
 				fRewriter.replace(node, invocation, createGroupDescription(accessType));
 				checkMoreThanOneFieldReference(node, syncBody);
 			} else {
@@ -357,7 +356,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					fRewriter.replace(syncStatement, newExpressionStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
 				} else if (sideEffectsFinder.hasSideEffects(firstStatement)) {
 
-					insertStatementsInBlockAreNotSynchronizedComment(statement, syncBody, firstStatement);
+					insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
 					if (!(node instanceof SimpleName)) {
 						fRewriter.replace(statement, newExpressionStatement, createGroupDescription(accessType));
 					} else {
@@ -371,15 +370,13 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return false;
 	}
 
-	private void insertStatementsInBlockAreNotSynchronizedComment(Statement statement, Block syncBody, Statement firstStatement) {
+	private void insertStatementsInBlockAreNotSynchronizedComment(Block syncBody, Statement firstStatement) {
 
 		if (!blocksWithComments.contains(syncBody)) {
-//			if (ASTMatcher.safeEquals(statement, firstStatement)) {
-				blocksWithComments.add(syncBody);
-				insertLineCommentBeforeNode(
-						ConcurrencyRefactorings.AtomicInteger_todo_comment_statements_not_properly_synchronized_block,
-						firstStatement, syncBody, Block.STATEMENTS_PROPERTY);
-//			}
+			blocksWithComments.add(syncBody);
+			insertLineCommentBeforeNode(
+					ConcurrencyRefactorings.AtomicInteger_todo_comment_statements_not_properly_synchronized_block,
+					firstStatement, syncBody, Block.STATEMENTS_PROPERTY);
 		}
 	}
 
@@ -700,7 +697,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			Expression expression= iterator.next();
 			if ((considerBinding(resolveBinding(expression))) && (!foundFieldToBeRefactoredInInfix)) {
 				foundFieldToBeRefactoredInInfix= true;
-				fRewriter.remove(expression, createGroupDescription(READ_ACCESS));
+				fRewriter.remove(expression, createGroupDescription(WRITE_ACCESS));
 				extendedOperands.remove(expression);
 			}
 		}
@@ -714,8 +711,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		newLeftOperand= getNewOperandWithGetInvocations(ast, leftOperand, receiver);
 		newRightOperand= getNewOperandWithGetInvocations(ast, rightOperand, receiver);
 
-		fRewriter.replace(rightOperand, newRightOperand, createGroupDescription(READ_ACCESS));
-		fRewriter.replace(leftOperand, newLeftOperand, createGroupDescription(READ_ACCESS));
+		fRewriter.replace(rightOperand, newRightOperand, createGroupDescription(WRITE_ACCESS));
+		fRewriter.replace(leftOperand, newLeftOperand, createGroupDescription(WRITE_ACCESS));
 	}
 
 	private MethodInvocation getMethodInvocationGet(AST ast, Expression expression) {
@@ -814,7 +811,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			replaceOperand(operand, rightOperand, receiver, ast);
 			changeFieldReferencesInExtendedOperandsToGetInvocations(infixExpression);
 			if (operator != InfixExpression.Operator.MINUS) {
-				fRewriter.remove(operand, createGroupDescription(READ_ACCESS));
+				fRewriter.remove(operand, createGroupDescription(WRITE_ACCESS));
 				infixExpression.extendedOperands().remove(0);
 			}
 			insertAtomicOpTodoComment(node);
@@ -854,7 +851,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			newRightOperand= getNewOperandWithGetInvocations(ast, (Expression) infixExpression.extendedOperands().get(0), receiver);
 			replaceOperandsAndChangeFieldRefsInExtOpsToGetInvocations(infixExpression, leftOperand, rightOperand, newLeftOperand, newRightOperand);
 			if (infixExpression.hasExtendedOperands() && operator != InfixExpression.Operator.MINUS) {
-				fRewriter.remove((ASTNode) infixExpression.extendedOperands().get(0), createGroupDescription(READ_ACCESS));
+				fRewriter.remove((ASTNode) infixExpression.extendedOperands().get(0), createGroupDescription(WRITE_ACCESS));
 				infixExpression.extendedOperands().remove(0);
 			}
 			insertAtomicOpTodoComment(node);
@@ -994,7 +991,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		AST ast= body.getAST();
 		Block newBlock= ast.newBlock();
 		ASTNode createMoveTarget= fRewriter.createMoveTarget(body);
-		fRewriter.replace(body, newBlock, createGroupDescription(COMMENT));
+		fRewriter.replace(body, newBlock, createGroupDescription(WRITE_ACCESS));
 		insertLineCommentBeforeMoveTarget(newBlock, createMoveTarget);
 		createWarningStatus(ConcurrencyRefactorings.AtomicInteger_warning_cannot_be_refactored_atomically);
 	}
@@ -1246,8 +1243,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private void replaceOperandsAndChangeFieldRefsInExtOpsToGetInvocations(InfixExpression infixExpression,
 			Expression leftOperand, Expression rightOperand, Expression newLeftOperand, Expression newRightOperand) {
 
-		fRewriter.replace(rightOperand, newRightOperand, createGroupDescription(READ_ACCESS));
-		fRewriter.replace(leftOperand, newLeftOperand, createGroupDescription(READ_ACCESS));
+		fRewriter.replace(rightOperand, newRightOperand, createGroupDescription(WRITE_ACCESS));
+		fRewriter.replace(leftOperand, newLeftOperand, createGroupDescription(WRITE_ACCESS));
 		changeFieldReferencesInExtendedOperandsToGetInvocations(infixExpression);
 	}
 

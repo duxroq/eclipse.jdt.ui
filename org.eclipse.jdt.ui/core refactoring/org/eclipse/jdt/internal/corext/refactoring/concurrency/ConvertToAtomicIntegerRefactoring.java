@@ -153,6 +153,12 @@ public class ConvertToAtomicIntegerRefactoring extends Refactoring {
 				importRewrite= StubUtility.createImportRewrite(root, true);
 			}
 			checkCompileErrors(result, root, unit);
+			PreconditionCheckerAtomicInteger preconditionChecker= new PreconditionCheckerAtomicInteger(fieldIdentifier);
+			root.accept(preconditionChecker);
+			result.merge(preconditionChecker.getStatus());
+			if (result.hasFatalError()) {
+				return result;
+			}
 			AccessAnalyzerForAtomicInteger analyzer= new AccessAnalyzerForAtomicInteger(this, fieldIdentifier, rewriter, importRewrite);
 			root.accept(analyzer);
 			result.merge(analyzer.getStatus());

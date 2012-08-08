@@ -26,6 +26,22 @@ import org.eclipse.jdt.core.dom.WhileStatement;
 
 public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 
+	/*
+	 * This class is meant to detect characteristics of a statement or expression
+	 * that would make its refactored version non-atomic
+	 * before it is refactored into an AtomicInteger API call.  As such, it is
+	 * sometimes prone to error as its ability to detect the future is limited.
+	 *
+	 * Therefore, there are situations where one must override the result
+	 * of the hasSideEffects method by adding special statements to a list
+	 * of statements that will be refactored into atomic calls despite this
+	 * visitor reporting it will not be atomic.
+	 *
+	 * Similarly, there are situations where this visitor will report there
+	 * are no side effects when in fact there are.  Using this class requires
+	 * in depth knowledge of the AtomicInteger API and the workings of the
+	 * AccessAnalyzerForAtomicInteger class.
+	 */
 	private final IVariableBinding notIncludingField;
 	private boolean hasSideEffects;
 
@@ -38,6 +54,21 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 
 		Expression rightHandSide= assignment.getRightHandSide();
 		rightHandSide.accept(this);
+		return true;
+	}
+
+	//TODO is this right?
+	@Override
+	public boolean visit(SimpleName simpleName) {
+
+		IBinding binding= resolveBinding(simpleName);
+		if (!considerBinding(binding)) {
+			if (binding instanceof IVariableBinding) {
+				if (((IVariableBinding) binding).isField()) {
+					hasSideEffects= true;
+				}
+			}
+		}
 		return true;
 	}
 

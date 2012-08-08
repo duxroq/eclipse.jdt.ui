@@ -71,8 +71,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private static final String REPLACE_TYPE_CONVERSION= ConcurrencyRefactorings.AtomicIntegerRefactoring_replace_type_conversion;
 	private static final String COMMENT= ConcurrencyRefactorings.ConcurrencyRefactorings_comment;
 
-	// TODO move precondition checking to a different class
-
 	private IVariableBinding fFieldBinding;
 	private ASTRewrite fRewriter;
 	private ImportRewrite fImportRewriter;
@@ -85,12 +83,23 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private ArrayList<Block> blocksWithComments;
 	private ArrayList<Statement> visitedSynchronizedBlocks;
 	private ArrayList<MethodDeclaration> visitedSynchronizedMethods;
+
+	// TODO maybe move the responsibilities of the SideEffectsFinder to instead adding statements to the lists below.
+	// The statements would be the only statement in their synchronized block or method and would have no side effects or multiple
+	// field references.  Just one atomic call to the AtomicInteger API.  The statements would be added to the list once they have
+	// recorded changes that meet the criteria above.
+	//
+	// The side effects finder is difficult to work with and therefore it may be beneficial to change the manner we remove
+	// synchronized blocks or tags.
 	private ArrayList<Statement> cannotRemoveSynchronizedBlockOrModifier;
 	private ArrayList<Statement> canRemoveSynchronizedBlockOrModifier;
 
+	// TODO fix tests
+
 	public AccessAnalyzerForAtomicInteger(
 			ConvertToAtomicIntegerRefactoring refactoring,
-			IVariableBinding field, ASTRewrite rewriter,
+			IVariableBinding field,
+			ASTRewrite rewriter,
 			ImportRewrite importRewrite) {
 
 		fFieldBinding= field.getVariableDeclaration();
@@ -146,8 +155,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	@Override
 	public boolean visit(Assignment assignment) {
 
-		// TODO rename needToVisitRHS
-		boolean needToVisitRHS= true;
+		boolean unRefactored= true;
 		boolean inReturnStatement= false;
 		Expression lhs= assignment.getLeftHandSide();
 		checkIfNodeIsInIfStatement(assignment);
@@ -174,17 +182,19 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (assignment.getOperator() == Assignment.Operator.ASSIGN) {
 				Expression rightHandSide= assignment.getRightHandSide();
 				if (rightHandSide instanceof InfixExpression) {
-					needToVisitRHS= infixExpressionHandler(assignment, ast, invocation, rightHandSide, receiver);
+					unRefactored= infixExpressionHandler(assignment, ast, invocation, rightHandSide, receiver);
 				}
-				if (needToVisitRHS) {
+				if (unRefactored) {
 					assignment.getRightHandSide().accept(new ChangeFieldToGetInvocationVisitor());
-					assignment.getRightHandSide().accept(new SideEffectsInAssignmentFinderAndCommenter());
+					// TODO find a better way to have postfix and prefix expressions commented
+					assignment.getRightHandSide().accept(new PostfixAndPrefixExpressionCommenter());
 					arguments.add((Expression) fRewriter.createMoveTarget(rightHandSide));
 				}
 			}
 			if (assignment.getOperator() != Assignment.Operator.ASSIGN) {
 				compoundAssignmentHandler(assignment, ast, invocation, arguments, assignment.getRightHandSide(), receiver);
 			}
+			// TODO find some way to handle return statements through the side effect finder
 			if ((!inReturnStatement)
 					&& (!removedSynchronizedBlock(assignment, invocation, WRITE_ACCESS))
 					&& (!removedSynchronizedModifier(assignment, invocation, WRITE_ACCESS))) {
@@ -260,13 +270,13 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	public boolean visit(SimpleName simpleName) {
 
 		AST ast= simpleName.getAST();
-		ReplacementPair replacementPair= null;
+		ReplacementPair replacePair= null;
 		String accessType= REPLACE_TYPE_CONVERSION;
 		MethodInvocation invocation= ast.newMethodInvocation();
-		replacementPair= checkForTypeConversionsAndReplace(simpleName, invocation, ast);
+		replacePair= checkForTypeConversionsAndReplace(simpleName, invocation, ast);
 
 		if ((!simpleName.isDeclaration()) && (considerBinding(resolveBinding(simpleName)))) {
-			if (replacementPair == null) {
+			if (replacePair == null) {
 				accessType= READ_ACCESS;
 				invocation= getMethodInvocationGet(ast, (Expression) ASTNode.copySubtree(ast, simpleName));
 				if (!(removedSynchronizedBlock(simpleName, invocation, accessType)
@@ -275,10 +285,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					fRewriter.replace(simpleName, invocation, createGroupDescription(accessType));
 				}
 			} else {
-				if (!(removedSynchronizedBlock(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType)
-				|| removedSynchronizedModifier(replacementPair.whatToReplace, (Expression) replacementPair.replacement, accessType))) {
+				if (!(removedSynchronizedBlock(replacePair.whatToReplace, (Expression) replacePair.replacement, accessType)
+				|| removedSynchronizedModifier(replacePair.whatToReplace, (Expression) replacePair.replacement, accessType))) {
 
-					fRewriter.replace(replacementPair.whatToReplace, replacementPair.replacement, createGroupDescription(accessType));
+					fRewriter.replace(replacePair.whatToReplace, replacePair.replacement, createGroupDescription(accessType));
 				}
 			}
 		}
@@ -354,7 +364,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	// TODO more than 1 field reference?
 	private boolean removedSynchronizedBlock(ASTNode node, Expression invocation, String accessType) {
 
 		AST ast= node.getAST();
@@ -580,6 +589,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 		return false;
 	}
+
 	private void checkMoreThanOneFieldReference(ASTNode node, Block syncBody) {
 
 		ASTNode enclosingStatement= ASTNodes.getParent(node, Statement.class);
@@ -1411,7 +1421,14 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	private class SideEffectsInAssignmentFinderAndCommenter extends ASTVisitor {
+	/*
+	 * This class was created to comment and add warnings when there are postfix and
+	 * prefix expressions on the right hand side of an assignment with side effects.
+	 *
+	 * This is necessary because our assignment visitor does not let us visit the
+	 * right hand side.
+	 */
+	private class PostfixAndPrefixExpressionCommenter extends ASTVisitor {
 
 		@Override
 		public boolean visit(PostfixExpression postfixExpression) {
@@ -1425,18 +1442,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					if (assignment != null) {
 						insertAtomicOpTodoComment(postfixExpression);
 					}
-				}
-			} else {
-				ASTNode statement= ASTNodes.getParent(postfixExpression, Statement.class);
-				if (statement != null) {
-				fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
-						+ statement.toString()
-						+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
-						+ postfixExpression.toString());
-				} else {
-					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
-							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
-							+ postfixExpression.toString());
 				}
 			}
 			return false;
@@ -1454,38 +1459,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 					if (assignment != null) {
 						insertAtomicOpTodoComment(prefixExpression);
 					}
-				}
-			} else {
-				ASTNode statement= ASTNodes.getParent(prefixExpression, Statement.class);
-				if (statement != null) {
-					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
-							+ statement.toString()
-							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
-							+ prefixExpression.toString());
-				} else {
-					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
-							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
-							+ prefixExpression.toString());
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public boolean visit(Assignment assignment) {
-
-			Expression leftHandSide= assignment.getLeftHandSide();
-			if (considerBinding(resolveBinding(leftHandSide))) {
-				ASTNode statement= ASTNodes.getParent(assignment, Statement.class);
-				if (statement != null) {
-					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
-							+ statement.toString()
-							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
-							+ assignment.toString());
-				} else {
-					fStatus.addFatalError(ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment
-							+ ConcurrencyRefactorings.AtomicInteger_error_side_effects_on_int_field_in_assignment2
-							+ assignment.toString());
 				}
 			}
 			return false;

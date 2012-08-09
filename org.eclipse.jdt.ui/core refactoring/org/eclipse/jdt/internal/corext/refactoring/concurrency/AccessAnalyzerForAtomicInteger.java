@@ -79,19 +79,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private ArrayList<Block> fBlocksWithComments;
 	private ArrayList<Statement> fVisitedSynchronizedBlocks;
 	private ArrayList<MethodDeclaration> fVisitedSynchronizedMethods;
-
-	// TODO maybe move the responsibilities of the SideEffectsFinder to instead adding statements to the lists below.
-	// The statements would be the only statement in their synchronized block or method and would have no side effects or multiple
-	// field references.  Just one atomic call to the AtomicInteger API.  The statements would be added to the list once they have
-	// recorded changes that meet the criteria above.
-	//
-	// The side effects finder is difficult to work with and therefore it may be beneficial to change the manner we remove
-	// synchronized blocks or tags.
-
 	private ArrayList<Statement> fCannotRemoveSynchronizedBlockOrModifier;
 	private ArrayList<Statement> fCanRemoveSynchronizedBlockOrModifier;
-
-	// TODO fix tests
 
 	public AccessAnalyzerForAtomicInteger(
 			ConvertToAtomicIntegerRefactoring refactoring,

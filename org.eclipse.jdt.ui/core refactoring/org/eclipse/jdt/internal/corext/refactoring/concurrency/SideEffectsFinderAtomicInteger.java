@@ -2,8 +2,10 @@ package org.eclipse.jdt.internal.corext.refactoring.concurrency;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
@@ -21,7 +23,11 @@ import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression.Operator;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
 public class SideEffectsFinderAtomicInteger extends ASTVisitor {
@@ -42,11 +48,11 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	 * in depth knowledge of the AtomicInteger API and the workings of the
 	 * AccessAnalyzerForAtomicInteger class.
 	 */
-	private final IVariableBinding notIncludingField;
+	private final IVariableBinding fField;
 	private boolean hasSideEffects;
 
 	public SideEffectsFinderAtomicInteger(IVariableBinding notIncludingField) {
-		this.notIncludingField= notIncludingField;
+		this.fField= notIncludingField;
 	}
 
 	@Override
@@ -57,7 +63,6 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 		return true;
 	}
 
-	//TODO is this right?
 	@Override
 	public boolean visit(SimpleName simpleName) {
 
@@ -83,35 +88,77 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 	public boolean visit(IfStatement ifStatement) {
 
 		hasSideEffects= true;
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean visit(ForStatement forStatement) {
 
 		hasSideEffects= true;
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean visit(EnhancedForStatement enhancedForStatement) {
 
 		hasSideEffects= true;
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean visit(WhileStatement whileStatement) {
 
 		hasSideEffects= true;
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean visit(DoStatement doStatement) {
 
 		hasSideEffects= true;
-		return false;
+		return true;
+	}
+
+	@Override
+	public boolean visit(SuperConstructorInvocation superConstructorInvocation) {
+
+		hasSideEffects= true;
+		return true;
+	}
+
+	@Override
+	public boolean visit(VariableDeclarationStatement variableDeclarationStatement) {
+
+		hasSideEffects= true;
+		return true;
+	}
+
+	@Override
+	public boolean visit(ConstructorInvocation constructorInvocation) {
+
+		hasSideEffects= true;
+		return true;
+	}
+
+	@Override
+	public boolean visit(TypeDeclaration typeDeclaration) {
+
+		hasSideEffects= true;
+		return true;
+	}
+
+	@Override
+	public boolean visit(AssertStatement assertStatement) {
+
+		hasSideEffects= true;
+		return true;
+	}
+
+	@Override
+	public boolean visit(SwitchStatement switchStatement) {
+
+		hasSideEffects= true;
+		return true;
 	}
 
 	@Override
@@ -167,10 +214,10 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 			hasSideEffects= true;
 		} else if (oneIsChosenField) {
 			if (leftOperandIsField &&
-					!(rightOperand instanceof SimpleName) && !(rightOperand instanceof NumberLiteral)) {
+					!(rightOperand instanceof NumberLiteral)) {
 				hasSideEffects= true;
 			} else if (rightOperandIsField &&
-					!(leftOperand instanceof SimpleName) && !(leftOperand instanceof NumberLiteral)) {
+					!(leftOperand instanceof NumberLiteral)) {
 				hasSideEffects= true;
 			}
 		}
@@ -207,7 +254,7 @@ public class SideEffectsFinderAtomicInteger extends ASTVisitor {
 		if (!(binding instanceof IVariableBinding)) {
 			return false;
 		}
-		return notIncludingField.isEqualTo(((IVariableBinding) binding).getVariableDeclaration());
+		return fField.isEqualTo(((IVariableBinding) binding).getVariableDeclaration());
 	}
 
 	public boolean hasSideEffects(ASTNode node) {

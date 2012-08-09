@@ -1,3 +1,4 @@
+
 package org.eclipse.jdt.internal.corext.refactoring.concurrency;
 
 import org.eclipse.osgi.util.NLS;

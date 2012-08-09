@@ -35,8 +35,8 @@ public class AtomicRefactoringChecker extends ASTVisitor {
 	private final IVariableBinding fField;
 	private boolean cannotRefactorAtomically;
 
-	public AtomicRefactoringChecker(IVariableBinding notIncludingField) {
-		this.fField= notIncludingField;
+	public AtomicRefactoringChecker(IVariableBinding field) {
+		this.fField= field;
 	}
 
 	@Override

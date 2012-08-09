@@ -73,7 +73,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private List<TextEditGroup> fGroupDescriptions;
 	private boolean fIsFieldFinal;
 	private RefactoringStatus fStatus;
-	private SideEffectsFinderAtomicInteger fSideEffectsFinder;
+	private AtomicRefactoringChecker fAtomicRefactoringChecker;
 	private HashMap<IfStatement, IfStatementProperties> fIfStatementsToNodes;
 	private ArrayList<MethodDeclaration> fMethodsWithComments;
 	private ArrayList<Block> fBlocksWithComments;
@@ -103,7 +103,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		fRewriter= rewriter;
 		fImportRewriter= importRewrite;
 		fGroupDescriptions= new ArrayList<TextEditGroup>();
-		fSideEffectsFinder= new SideEffectsFinderAtomicInteger(fFieldBinding);
+		fAtomicRefactoringChecker= new AtomicRefactoringChecker(fFieldBinding);
 		fMethodsWithComments= new ArrayList<MethodDeclaration>();
 		fBlocksWithComments= new ArrayList<Block>();
 		fVisitedSynchronizedBlocks= new ArrayList<Statement>();
@@ -294,7 +294,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private boolean canRemoveSynchBlockOrModifier(Statement statement) {
 
 		return (!fCannotRemoveSynchronizedBlockOrModifier.contains(statement))
-				&& ((fCanRemoveSynchronizedBlockOrModifier.contains(statement) || !fSideEffectsFinder.hasSideEffects(statement)));
+				&& ((fCanRemoveSynchronizedBlockOrModifier.contains(statement) || !fAtomicRefactoringChecker.cannotRefactorAtomically(statement)));
 	}
 
 	private ReplacementPair checkForIntToDoubleConversion(SimpleName simpleName, MethodInvocation invocation, AST ast) {
@@ -463,7 +463,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (!statement.equals(enclosingStatement)){
 				statement.accept(new FieldReferenceFinderAtomicInteger(fStatus));
 			} else {
-				if (fSideEffectsFinder.hasSideEffects(statement)) {
+				if (fAtomicRefactoringChecker.cannotRefactorAtomically(statement)) {
 					// TODO change warning here
 					createWarningStatus(ConcurrencyRefactorings.AtomicInteger_warning_side_effects1
 							+ ConcurrencyRefactorings.AtomicInteger_warning_side_effects2
@@ -1071,7 +1071,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 						removeSynchronizedBlock(node, invocation, accessType, ast, statement, syncStatement);
 						return true;
-					} else if (fSideEffectsFinder.hasSideEffects(firstStatement)) {
+					} else if (fAtomicRefactoringChecker.cannotRefactorAtomically(firstStatement)) {
 						insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
 						checkMoreThanOneFieldReference(node, syncBody);
 						return false;
@@ -1104,7 +1104,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 							removeSynchronizedModifier(methodDecl, modifiers);
 							fRewriter.replace(node, invocation, createGroupDescription(accessType));
 							return true;
-						} else if ((fSideEffectsFinder.hasSideEffects(firstStatement))
+						} else if ((fAtomicRefactoringChecker.cannotRefactorAtomically(firstStatement))
 								&& !(statementIsRefactorableIntoCompareAndSet(firstStatement))) {
 
 							insertStatementsNotSynchronizedInMethodComment(node, methodDecl);

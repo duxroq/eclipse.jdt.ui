@@ -161,7 +161,7 @@ public class AtomicOpTodoCommenter {
 			IfStatementProperties properties= entry.getValue();
 			if (properties.nodes.contains(node)) {
 				foundNode= true;
-				IfStatementProperties.Location location= properties.nodeLocation.get(properties.nodes.indexOf(node));
+				IfStatementProperties.NodeLocation location= properties.nodeLocation.get(properties.nodes.indexOf(node));
 				switch (location) {
 					case EXPRESSION:
 						break;

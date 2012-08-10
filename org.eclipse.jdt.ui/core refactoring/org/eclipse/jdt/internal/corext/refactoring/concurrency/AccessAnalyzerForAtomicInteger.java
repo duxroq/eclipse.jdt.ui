@@ -1,7 +1,6 @@
 package org.eclipse.jdt.internal.corext.refactoring.concurrency;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -182,7 +181,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 							invocation, infixExpression, node, operator);
 					return false;
 				} else if (rightOperandIsField) {
-					unRefactored= rightOperandOfInfixExpressionHandler(rightOperand, leftOperand, receiver, ast,
+					unRefactored= rightOperandInfixExpressionHandler(rightOperand, leftOperand, receiver, ast,
 							invocation, infixExpression, node, operator);
 					return unRefactored;
 				}
@@ -318,11 +317,13 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (pair == null) {
 				accessType= READ_ACCESS;
 				invocation= newGetInvocation(ast, (Expression) ASTNode.copySubtree(ast, simpleName));
-				if (!(removedSynchBlock(simpleName, invocation, accessType) || removedSynchModifier(simpleName, invocation, accessType))) {
+				if (!(removedSynchBlock(simpleName, invocation, accessType)
+				|| removedSynchModifier(simpleName, invocation, accessType))) {
 					fRewriter.replace(simpleName, invocation, createGroupDescription(accessType));
 				}
 			} else {
-				if (!(removedSynchBlock(pair.whatToReplace, (Expression) pair.replacement, accessType) || removedSynchModifier(pair.whatToReplace, (Expression) pair.replacement, accessType))) {
+				if (!(removedSynchBlock(pair.whatToReplace, (Expression) pair.replacement, accessType)
+				|| removedSynchModifier(pair.whatToReplace, (Expression) pair.replacement, accessType))) {
 					fRewriter.replace(pair.whatToReplace, pair.replacement, createGroupDescription(accessType));
 				}
 			}
@@ -352,14 +353,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		fImportRewriter.addImport(ConcurrencyRefactorings.AtomicIntegerRefactoring_import);
 	}
 
-	public Collection<TextEditGroup> getGroupDescriptions() {
-		return fGroupDescriptions;
-	}
-
-	public RefactoringStatus getStatus() {
-		return fStatus;
-	}
-
 	private boolean canRemoveSynchBlockOrModifier(Statement statement) {
 
 		return (!fCannotRemoveSynchronizedBlockOrModifier.contains(statement))
@@ -381,7 +374,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 						if (statement != null) {
 							fCanRemoveSynchronizedBlockOrModifier.add(statement);
 						}
-						invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
+						invocation= getTypeConversionInvocation(ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
 						return new ReplacementPair(parent, invocation);
 					}
 				}
@@ -404,15 +397,15 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if (type instanceof PrimitiveType) {
 				Code primitiveTypeCode= ((PrimitiveType) type).getPrimitiveTypeCode();
 				if (primitiveTypeCode.equals(PrimitiveType.DOUBLE)) {
-					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
+					invocation= getTypeConversionInvocation(ast, ConcurrencyRefactorings.AtomicInteger_doubleValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.BYTE)) {
-					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_byteValue);
+					invocation= getTypeConversionInvocation(ast, ConcurrencyRefactorings.AtomicInteger_byteValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.FLOAT)) {
-					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_floatValue);
+					invocation= getTypeConversionInvocation(ast, ConcurrencyRefactorings.AtomicInteger_floatValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.SHORT)) {
-					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_shortValue);
+					invocation= getTypeConversionInvocation(ast, ConcurrencyRefactorings.AtomicInteger_shortValue);
 				} else if (primitiveTypeCode.equals(PrimitiveType.LONG)) {
-					invocation= replaceTypeConversion(ast, ConcurrencyRefactorings.AtomicInteger_longValue);
+					invocation= getTypeConversionInvocation(ast, ConcurrencyRefactorings.AtomicInteger_longValue);
 				} else {
 					return null;
 				}
@@ -1052,7 +1045,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 						removeSynchronizedBlock(node, invocation, accessType, ast, statement, syncStatement);
 						return true;
-					} else if (fAtomicRefactoringChecker.cannotRefactorAtomically(firstStatement)) {
+					} else if (!canRemoveSynchBlockOrModifier(firstStatement)) {
 						insertStatementsInBlockAreNotSynchronizedComment(syncBody, firstStatement);
 						checkMoreThanOneFieldReference(node, syncBody);
 						return false;
@@ -1085,7 +1078,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 							removeSynchronizedModifier(methodDecl, modifiers);
 							fRewriter.replace(node, invocation, createGroupDescription(accessType));
 							return true;
-						} else if ((fAtomicRefactoringChecker.cannotRefactorAtomically(firstStatement))
+						} else if (!canRemoveSynchBlockOrModifier(firstStatement)
 								&& !(statementIsRefactorableIntoCompareAndSet(firstStatement))) {
 
 							insertStatementsNotSynchronizedInMethodComment(node, methodDecl);
@@ -1143,7 +1136,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	private MethodInvocation replaceTypeConversion(AST ast, String invocationName) {
+	private MethodInvocation getTypeConversionInvocation(AST ast, String invocationName) {
 
 		MethodInvocation methodInvocation= ast.newMethodInvocation();
 		methodInvocation.setName(ast.newSimpleName(invocationName));
@@ -1165,7 +1158,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return null;
 	}
 
-	private boolean rightOperandOfInfixExpressionHandler(Expression rightOperand, Expression leftOperand,
+	private boolean rightOperandInfixExpressionHandler(Expression rightOperand, Expression leftOperand,
 			Expression receiver, AST ast, MethodInvocation invocation, InfixExpression infixExpression, Assignment node,
 			Operator operator) {
 
@@ -1224,8 +1217,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			EXPRESSION, THEN_STATEMENT, ELSE_STATEMENT
 		}
 	}
-
-	//----- Helper classes
 
 	public static class NodeFinder extends ASTVisitor {
 
@@ -1376,5 +1367,13 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			this.whatToReplace= whatToReplace;
 			this.replacement= replacement;
 		}
+	}
+
+	public List<TextEditGroup> getGroupDescriptions() {
+		return fGroupDescriptions;
+	}
+
+	public RefactoringStatus getStatus() {
+		return fStatus;
 	}
 }

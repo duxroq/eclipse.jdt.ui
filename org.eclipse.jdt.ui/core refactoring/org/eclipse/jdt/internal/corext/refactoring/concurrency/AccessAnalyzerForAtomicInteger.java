@@ -121,6 +121,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		Expression leftHandSide= assignment.getLeftHandSide();
 		if (checkIfNodeIsInIfStatement(assignment)) {
 			// TODO ?
+//			System.out.println("Hey this assignment is in an ifStatement:::" + assignment.toString());
 		}
 
 		if (!considerBinding(resolveBinding(leftHandSide))) {
@@ -468,12 +469,11 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		if (properties != null) {
 			if (fIfStatements.get(ifStatement).isRefactorableIntoCompareAndSet()) {
 				refactorIfStatementIntoCompareAndSetInvocation(ifStatement, properties.nodes);
-				return false;
 			} else {
 				insertStatementsNotSynchronizedInMethodComment(ifStatement);
 			}
 		}
-		return true;
+		return false;
 	}
 
 	private IfStatementProperties getIfStatementProperties(IfStatement ifStatement) {
@@ -702,7 +702,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			replaceOperandWithNewOperand(rightOperand, operand, receiver);
 			convertFieldRefsInExtOperandsToGetters(infixExpression);
 			fRewriter.remove(operand, createGroupDescription(WRITE_ACCESS));
-			infixExpression.extendedOperands().remove(0);
 			insertAtomicOpTodoComment(assignment);
 			// i = 12 + j ==> i.addAndGet(12 + j)
 			refactorAssignmentIntoAddAndGet(invocation, infixExpression, operator, receiver, assignment);
@@ -725,6 +724,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
+	// TODO rename
 	private boolean extendedOperandsOfInfixExpressionHandler(MethodInvocation invocation, InfixExpression infixExpression, Assignment assignment) {
 
 		Operator operator= infixExpression.getOperator();
@@ -733,9 +733,13 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		replaceOldOperandsWithNewOperands(assignment, infixExpression);
 		insertAtomicOpTodoComment(assignment);
 
+		// Example: i = 3 + f + i
 		if (operator != InfixExpression.Operator.MINUS) {
-			if (foundFieldInExtendedOperands(infixExpression)) {
+			// i in the extended operands is removed
+			boolean found= findFieldInExtOperandsAndRemoveFirst(infixExpression);
+			if (found) {
 				convertFieldRefsInExtOperandsToGetters(infixExpression);
+				// i.addAndGet(3 + f)
 				refactorAssignmentIntoAddAndGet(invocation, infixExpression, operator, receiver, assignment);
 				return true;
 			} else {
@@ -751,6 +755,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			Object operator, Expression receiver, ASTNode node) {
 
 		AST ast= invocation.getAST();
+//		System.out.println("Hey the operand issss::::: " + operand.toString());
 
 		if ((operator == InfixExpression.Operator.PLUS) || (operator == Assignment.Operator.PLUS_ASSIGN)) {
 			// i = i + 2 ==> i.addAndGet(2) OR i += 2 ==> i.addAndGet(2)
@@ -767,6 +772,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				invocation.arguments().add(createNegativeExpression(operand));
 			}
 		}
+		// If the new addAndGet invocation is inside an if statement, then it will not be refactored into compare and set
 		preserveIfStatementOverCompareAndSet(node);
 	}
 
@@ -1255,7 +1261,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	private boolean foundFieldInExtendedOperands(InfixExpression infixExpression) {
+	private boolean findFieldInExtOperandsAndRemoveFirst(InfixExpression infixExpression) {
 
 		List<Expression> extendedOperands= infixExpression.extendedOperands();
 		boolean foundField= false;

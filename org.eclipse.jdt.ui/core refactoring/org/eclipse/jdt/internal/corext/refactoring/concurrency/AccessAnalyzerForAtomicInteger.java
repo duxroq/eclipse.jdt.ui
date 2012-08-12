@@ -654,11 +654,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 			replaceOperandWithNewOperand(rightOperand, operand, receiver);
 			convertFieldRefsInExtOperandsToGetters(infixExpression);
-			// TODO make sure a test for the minus op passes for this case
-			if (operator != InfixExpression.Operator.MINUS) {
-				fRewriter.remove(operand, createGroupDescription(WRITE_ACCESS));
-				infixExpression.extendedOperands().remove(0);
-			}
+			fRewriter.remove(operand, createGroupDescription(WRITE_ACCESS));
 			insertAtomicOpTodoComment(assignment);
 			refactorAssignmentIntoAddAndGet(invocation, infixExpression, operator, receiver, assignment);
 		} else {
@@ -699,22 +695,20 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		Operator operator= infixExpression.getOperator();
 		leftOperand.accept(new ReplaceFieldWithGetter());
 
-		// TODO fix these comments
 		if (infixExpression.hasExtendedOperands() && operator != InfixExpression.Operator.MINUS) {
-			// i = 12 + i + j
-			// replace i in the infix with j, and delete duplicate j
-			// i = 12 + j ==> i.addAndGet(12 + j)
+			// Example: i = 12 + i + j
 			Expression operand= (Expression) infixExpression.extendedOperands().get(0);
+			// replace i in the infix with j, and delete duplicate j
 			replaceOperandWithNewOperand(rightOperand, operand, receiver);
 			convertFieldRefsInExtOperandsToGetters(infixExpression);
 			fRewriter.remove(operand, createGroupDescription(WRITE_ACCESS));
 			infixExpression.extendedOperands().remove(0);
 			insertAtomicOpTodoComment(assignment);
+			// i = 12 + j ==> i.addAndGet(12 + j)
 			refactorAssignmentIntoAddAndGet(invocation, infixExpression, operator, receiver, assignment);
 			return true;
 		} else if (operator != InfixExpression.Operator.MINUS) {
-			// i = 12 + i
-			// get the left operand "12"
+			// Example: i = 12 + i
 			// i = 12 + i ==> i.addAndGet(12)
 			refactorAssignmentIntoAddAndGet(invocation, leftOperand, operator, receiver, assignment);
 			if (!isAnAtomicAccess(leftOperand)) {
@@ -753,7 +747,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return false;
 	}
 
-	// TODO params?
 	private void refactorAssignmentIntoAddAndGet(MethodInvocation invocation, Expression operand,
 			Object operator, Expression receiver, ASTNode node) {
 
@@ -787,7 +780,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		AST ast= infixExpression.getAST();
 
 		// have to craft a new infixExpression because directly changing the operator does
-		// not persist in the refactoring.
+		// not persist in creating the text edits.
 		InfixExpression newInfixExpression= cloneInfixWithRecordedChanges(infixExpression, receiver);
 
 		PrefixExpression newPrefixExpression= ast.newPrefixExpression();

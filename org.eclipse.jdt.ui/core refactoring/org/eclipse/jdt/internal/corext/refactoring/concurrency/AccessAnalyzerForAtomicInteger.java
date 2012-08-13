@@ -558,10 +558,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		if (ifStatement != null) {
 			CompareAndSetRefactoringProperties properties= getIfStatementProperties(ifStatement);
 
-			if (!properties.nodes().contains(node)) {
-				properties.nodes().add(node);
+			if (!properties.nodes.contains(node)) {
+				properties.nodes.add(node);
 				boolean isRefactorableForCompareAndSet= isRefactorableForCompareAndSet(node, ifStatement);
-				properties.nodeFitsCompareAndSet().add(new Boolean(isRefactorableForCompareAndSet));
+				properties.nodeFitsCompareAndSet.add(new Boolean(isRefactorableForCompareAndSet));
 			}
 		}
 		return;
@@ -821,7 +821,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 		for (Map.Entry<IfStatement, CompareAndSetRefactoringProperties> entry : fIfStatements.entrySet()) {
 			CompareAndSetRefactoringProperties properties= entry.getValue();
-			if (properties.nodes().contains(node)) {
+			if (properties.nodes.contains(node)) {
 				properties.isRefactorable= false;
 			}
 		}
@@ -831,7 +831,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 		// By now nodes is guaranteed to have 2 elements
 		CompareAndSetRefactoringProperties properties= fIfStatements.get(ifStatement);
-		ArrayList<ASTNode> nodes= properties.nodes();
+		ArrayList<ASTNode> nodes= properties.nodes;
 		ASTNode firstNode= nodes.get(0);
 		ASTNode secondNode= nodes.get(1);
 
@@ -892,8 +892,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		compareAndSetInvocation.setName(ast.newSimpleName(ConcurrencyRefactorings.AtomicInteger_compareAndSet));
 		compareAndSetInvocation.setExpression(ast.newSimpleName(fFieldBinding.getName()));
 
-		Expression setExpression= properties.getSetExpression();
-		Expression compareExpression= properties.getCompareExpression();
+		Expression setExpression= properties.setExpression;
+		Expression compareExpression= properties.compareExpression;
 
 		if ((compareExpression != null) && (setExpression != null)) {
 			compareAndSetInvocation.arguments().add(fRewriter.createMoveTarget(compareExpression));
@@ -1040,23 +1040,15 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		private Expression setExpression= null;
 		private Expression compareExpression= null;
 
-		public boolean argsAreAtomicAccesses() {
-			return (compareExpression != null) && (setExpression != null)
-					&& (isAnAtomicAccess(compareExpression)) && (isAnAtomicAccess(setExpression));
-		}
-
-		public Expression getCompareExpression() {
-			return compareExpression;
-		}
-
-		public Expression getSetExpression() {
-			return setExpression;
-		}
-
 		public CompareAndSetRefactoringProperties() {
 			isRefactorable= true;
 			nodes= new ArrayList<ASTNode>();
 			nodeFitsCompareAndSet= new ArrayList<Boolean>();
+		}
+
+		public boolean argsAreAtomicAccesses() {
+			return (compareExpression != null) && (setExpression != null)
+					&& (isAnAtomicAccess(compareExpression)) && (isAnAtomicAccess(setExpression));
 		}
 
 		public boolean isRefactorableIntoCompareAndSet() {
@@ -1069,14 +1061,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				}
 			}
 			return true;
-		}
-
-		public ArrayList<ASTNode> nodes() {
-			return nodes;
-		}
-
-		public ArrayList<Boolean> nodeFitsCompareAndSet() {
-			return nodeFitsCompareAndSet;
 		}
 	}
 

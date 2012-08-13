@@ -66,7 +66,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	private static final String REPLACE_TYPE_CONVERSION= ConcurrencyRefactorings.AtomicIntegerRefactoring_replace_type_conversion;
 	private static final String COMMENT= ConcurrencyRefactorings.ConcurrencyRefactorings_comment;
 
-	private static IVariableBinding fFieldBinding;
+	private IVariableBinding fFieldBinding;
 	private ASTRewrite fRewriter;
 	private ImportRewrite fImportRewriter;
 	private List<TextEditGroup> fGroupDescriptions;
@@ -83,6 +83,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	// TODO fix warnings
 	// TODO organize and simplify tests
 	// TODO improve pipeline for converting if statements to compareAndSet, return assignments
+	// TODO instead of keeping a list of all if statements, only add those who are refactorable into compareAndSet
 
 	public AccessAnalyzerForAtomicInteger(
 			ConvertToAtomicIntegerRefactoring refactoring,
@@ -1319,7 +1320,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				(type == ASTNode.CAST_EXPRESSION) || (type == ASTNode.INSTANCEOF_EXPRESSION);
 	}
 
-	private static IBinding resolveBinding(Expression expression) {
+	private IBinding resolveBinding(Expression expression) {
 
 		if (expression instanceof SimpleName) {
 			return ((SimpleName) expression).resolveBinding();
@@ -1382,7 +1383,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return parent instanceof ExpressionStatement;
 	}
 
-	private static boolean isAnAtomicAccess(Expression expression) {
+	private boolean isAnAtomicAccess(Expression expression) {
 
 		IBinding resolveBinding= resolveBinding(expression);
 
@@ -1408,7 +1409,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		return fStatus;
 	}
 
-	private static boolean considerBinding(IBinding binding) {
+	private boolean considerBinding(IBinding binding) {
 
 		if (!(binding instanceof IVariableBinding)) {
 			return false;

@@ -119,10 +119,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		boolean assignmentIsRefactored= false;
 		boolean inReturnStatement= false;
 		Expression leftHandSide= assignment.getLeftHandSide();
-		if (checkIfNodeIsInIfStatement(assignment)) {
-			// TODO ?
-//			System.out.println("Hey this assignment is in an ifStatement:::" + assignment.toString());
-		}
+		checkIfNodeIsInIfStatement(assignment);
 
 		if (!considerBinding(resolveBinding(leftHandSide))) {
 			return true;
@@ -695,6 +692,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		Operator operator= infixExpression.getOperator();
 		leftOperand.accept(new ReplaceFieldWithGetter());
 
+		// TODO make make tests for subtraction
 		if (infixExpression.hasExtendedOperands() && operator != InfixExpression.Operator.MINUS) {
 			// Example: i = 12 + i + j
 			Expression operand= (Expression) infixExpression.extendedOperands().get(0);
@@ -755,7 +753,6 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			Object operator, Expression receiver, ASTNode node) {
 
 		AST ast= invocation.getAST();
-//		System.out.println("Hey the operand issss::::: " + operand.toString());
 
 		if ((operator == InfixExpression.Operator.PLUS) || (operator == Assignment.Operator.PLUS_ASSIGN)) {
 			// i = i + 2 ==> i.addAndGet(2) OR i += 2 ==> i.addAndGet(2)
@@ -1040,7 +1037,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 	}
 
 	// TODO poor names
-	protected static class IfStatementProperties {
+	private static class IfStatementProperties {
 
 		private boolean isRefactorable= true;
 		private ArrayList<Boolean> nodeFitsCompareAndSet;
@@ -1083,7 +1080,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	protected static class NodeFinder extends ASTVisitor {
+	private class NodeFinder extends ASTVisitor {
 
 		ASTNode nodeToFind;
 		boolean containsNode;
@@ -1384,7 +1381,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 	private void insertAtomicOpTodoComment(ASTNode node) {
 
-		AtomicOpTodoCommenter todoCommenter= new AtomicOpTodoCommenter(fRewriter, fStatus, fIfStatements, fGroupDescriptions);
+		AtomicOpTodoCommenter todoCommenter= new AtomicOpTodoCommenter(fRewriter, fStatus, fGroupDescriptions);
 		todoCommenter.addCommentBeforeNode(node);
 	}
 

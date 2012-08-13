@@ -1,9 +1,7 @@
 package org.eclipse.jdt.internal.corext.refactoring.concurrency;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.text.edits.TextEditGroup;
 
@@ -26,9 +24,16 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
-import org.eclipse.jdt.internal.corext.refactoring.concurrency.AccessAnalyzerForAtomicInteger.IfStatementProperties;
-import org.eclipse.jdt.internal.corext.refactoring.concurrency.AccessAnalyzerForAtomicInteger.NodeFinder;
 
+/**
+ * Description: This class is responsible for inserting todo line comments to signify that an
+ * operation cannot be executed atomically. Since these comments can be applied in nearly any
+ * environment, be it a block or the body of a switch statement, this class must be able to
+ * accomodate all possibilities to avoid runtime errors.
+ *
+ * @author Alexandria
+ *
+ */
 public class AtomicOpTodoCommenter {
 
 	private static final String WRITE_ACCESS= ConcurrencyRefactorings.ConcurrencyRefactorings_write_access;
@@ -36,15 +41,12 @@ public class AtomicOpTodoCommenter {
 
 	private ASTRewrite fRewriter;
 	private RefactoringStatus fStatus;
-	private HashMap<IfStatement, IfStatementProperties> fIfStatementsToNodes;
 	private List<TextEditGroup> fGroupDescriptions;
 
-	public AtomicOpTodoCommenter(ASTRewrite rewriter, RefactoringStatus status, HashMap<IfStatement, IfStatementProperties> ifStatementsToNodes,
-			List<TextEditGroup> groupDescriptions) {
+	public AtomicOpTodoCommenter(ASTRewrite rewriter, RefactoringStatus status, List<TextEditGroup> groupDescriptions) {
 
 		fRewriter= rewriter;
 		fStatus= status;
-		fIfStatementsToNodes= ifStatementsToNodes;
 		fGroupDescriptions= groupDescriptions;
 	}
 
@@ -141,6 +143,34 @@ public class AtomicOpTodoCommenter {
 		return false;
 	}
 
+	private boolean insertAtomicOpTodoCommentIfStatement(ASTNode node) {
+
+		IfStatement ifStatement= (IfStatement) ASTNodes.getParent(node, IfStatement.class);
+		if (ifStatement != null) {
+			Statement elseStatement= ifStatement.getElseStatement();
+			Statement thenStatement= ifStatement.getThenStatement();
+			Statement statement= (Statement) ASTNodes.getParent(node, Statement.class);
+
+			if (thenStatement != null) {
+				if (!(thenStatement instanceof Block)) {
+					if (ASTMatcher.safeEquals(thenStatement, statement)) {
+						makeNewBlockInsertCommentCreateWarning(thenStatement);
+						return true;
+					}
+				}
+			}
+			if (elseStatement != null) {
+				if (!(elseStatement instanceof Block)) {
+					if (ASTMatcher.safeEquals(elseStatement, statement)) {
+						makeNewBlockInsertCommentCreateWarning(elseStatement);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	private void defaultAtomicOpTodoCommentInsertion(ASTNode node) {
 
 		ASTNode body= ASTNodes.getParent(node, Block.class);
@@ -153,33 +183,6 @@ public class AtomicOpTodoCommenter {
 		createWarningStatus(node.toString() + ConcurrencyRefactorings.AtomicInteger_warning_cannot_be_refactored_atomically);
 	}
 
-	private boolean insertAtomicOpTodoCommentIfStatement(ASTNode node) {
-
-		boolean foundNode= false;
-		for (Map.Entry<IfStatement, IfStatementProperties> entry : fIfStatementsToNodes.entrySet()) {
-			IfStatement ifStatement= entry.getKey();
-			IfStatementProperties properties= entry.getValue();
-			if (properties.nodes.contains(node)) {
-				foundNode= true;
-				IfStatementProperties.NodeLocation location= properties.nodeLocation.get(properties.nodes.indexOf(node));
-				switch (location) {
-					case EXPRESSION:
-						break;
-					case THEN_STATEMENT:
-						Statement thenStatement= ifStatement.getThenStatement();
-						insertAtomicOpTodoCommentIfStatement(node, thenStatement);
-						break;
-					case ELSE_STATEMENT:
-						Statement elseStatement= ifStatement.getElseStatement();
-						insertAtomicOpTodoCommentIfStatement(node, elseStatement);
-						break;
-					default:
-						break;
-				}
-			}
-		}
-		return foundNode;
-	}
 
 	private void makeNewBlockInsertCommentCreateWarning(Statement body) {
 
@@ -198,25 +201,6 @@ public class AtomicOpTodoCommenter {
 		ListRewrite rewriter= fRewriter.getListRewrite(newBlock, Block.STATEMENTS_PROPERTY);
 		rewriter.insertLast(createMoveTarget, createGroupDescription(WRITE_ACCESS));
 		rewriter.insertFirst(lineComment, createGroupDescription(COMMENT));
-	}
-
-	private void insertAtomicOpTodoCommentIfStatement(ASTNode node, Statement statement) {
-
-		if (statement != null) {
-			NodeFinder nodeFinder= new NodeFinder(node);
-			statement.accept(nodeFinder);
-			if (nodeFinder.containsNode) {
-				if (statement instanceof Block) {
-					Statement parentStatement= (Statement) ASTNodes.getParent(node, Statement.class);
-					if (parentStatement != null) {
-						insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
-								parentStatement, statement, Block.STATEMENTS_PROPERTY);
-					}
-				} else {
-					makeNewBlockInsertCommentCreateWarning(statement);
-				}
-			}
-		}
 	}
 
 	private ListRewrite insertLineCommentBeforeNode(String comment, ASTNode node, ASTNode body, ChildListPropertyDescriptor descriptor) {

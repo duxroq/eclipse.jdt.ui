@@ -26,12 +26,12 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 
 /**
- * Description: This class is responsible for inserting todo line comments to signify that an
- * operation cannot be executed atomically. Since these comments can be applied in nearly any
- * environment, be it a block or the body of a switch statement, this class must be able to
- * accomodate all possibilities to avoid runtime errors.
+ * This class is responsible for inserting todo line comments to signify that an operation cannot be
+ * executed atomically. Since these comments can be applied in nearly any environment, be it a block
+ * or the body of a switch statement, this class must be able to accomodate all possibilities to
+ * avoid runtime errors.
  *
- * @author Alexandria
+ * @author Alexandria Shearer
  *
  */
 public class AtomicOpTodoCommenter {
@@ -56,11 +56,11 @@ public class AtomicOpTodoCommenter {
 
 	private void insertAtomicOpTodoComment(ASTNode node) {
 
-		if (insertAtomicOpTodoCommentIfStatement(node)
-				|| insertAtomicOpTodoCommentForStatement(node)
-				|| insertAtomicOpTodoCommentEnhancedForStatement(node)
-				|| insertAtomicOpTodoCommentDoStatement(node)
-				|| insertAtomicOpTodoCommentWhileStatement(node)
+		if (insertAtomicOpTodoCommentIfStatementNoBlock(node)
+				|| insertAtomicOpTodoCommentForStatementNoBlock(node)
+				|| insertAtomicOpTodoCommentEnhancedForStatementNoBlock(node)
+				|| insertAtomicOpTodoCommentDoStatementNoBlock(node)
+				|| insertAtomicOpTodoCommentWhileStatementNoBlock(node)
 				|| insertAtomicOpTodoCommentSwitchStatement(node)) {
 			return;
 		}
@@ -89,7 +89,7 @@ public class AtomicOpTodoCommenter {
 		return false;
 	}
 
-	private boolean insertAtomicOpTodoCommentWhileStatement(ASTNode node) {
+	private boolean insertAtomicOpTodoCommentWhileStatementNoBlock(ASTNode node) {
 
 		WhileStatement whileStatement= (WhileStatement) ASTNodes.getParent(node, WhileStatement.class);
 		if (whileStatement != null) {
@@ -102,7 +102,7 @@ public class AtomicOpTodoCommenter {
 		return false;
 	}
 
-	private boolean insertAtomicOpTodoCommentDoStatement(ASTNode node) {
+	private boolean insertAtomicOpTodoCommentDoStatementNoBlock(ASTNode node) {
 
 		DoStatement doStatement= (DoStatement) ASTNodes.getParent(node, DoStatement.class);
 		if (doStatement != null) {
@@ -115,7 +115,7 @@ public class AtomicOpTodoCommenter {
 		return false;
 	}
 
-	private boolean insertAtomicOpTodoCommentEnhancedForStatement(ASTNode node) {
+	private boolean insertAtomicOpTodoCommentEnhancedForStatementNoBlock(ASTNode node) {
 
 		EnhancedForStatement enhancedForStatement= (EnhancedForStatement) ASTNodes.getParent(node, EnhancedForStatement.class);
 
@@ -129,7 +129,7 @@ public class AtomicOpTodoCommenter {
 		return false;
 	}
 
-	private boolean insertAtomicOpTodoCommentForStatement(ASTNode node) {
+	private boolean insertAtomicOpTodoCommentForStatementNoBlock(ASTNode node) {
 
 		ForStatement forStatement= (ForStatement) ASTNodes.getParent(node, ForStatement.class);
 
@@ -143,7 +143,7 @@ public class AtomicOpTodoCommenter {
 		return false;
 	}
 
-	private boolean insertAtomicOpTodoCommentIfStatement(ASTNode node) {
+	private boolean insertAtomicOpTodoCommentIfStatementNoBlock(ASTNode node) {
 
 		IfStatement ifStatement= (IfStatement) ASTNodes.getParent(node, IfStatement.class);
 		if (ifStatement != null) {

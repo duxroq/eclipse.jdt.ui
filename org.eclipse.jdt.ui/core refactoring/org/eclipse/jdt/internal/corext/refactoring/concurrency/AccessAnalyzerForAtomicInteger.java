@@ -458,7 +458,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		boolean thenStatementHasOneStatement=
 				((thenStatement instanceof Block) && (((Block) thenStatement).statements().size() == 1))
 						|| (!(thenStatement instanceof Block));
-		if ((elseStatement != null) || (thenStatementHasOneStatement)) {
+		if ((elseStatement != null) || (!thenStatementHasOneStatement)) {
 			return true;
 		}
 
@@ -797,6 +797,7 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 	private InfixExpression cloneInfixWithPlusOperator(InfixExpression infixExpression, Expression receiver) {
 
+		// Example: (i.get()*3) - j ==> returns (i.get()*3) + j
 		AST ast= infixExpression.getAST();
 		Expression rightOperand= infixExpression.getRightOperand();
 		Expression newLeftOperand= getOperandWithGetters(rightOperand, receiver);
@@ -895,10 +896,10 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 
 		Statement statement= (Statement) ASTNodes.getParent(node, Statement.class);
 		ASTNode assignment= ASTNodes.getParent(node, Assignment.class);
-		ASTNode infix= ASTNodes.getParent(node, InfixExpression.class);
+		ASTNode infixExpression= ASTNodes.getParent(node, InfixExpression.class);
 		if ((statement != null)
 				&& ((statement instanceof ExpressionStatement) || (statement instanceof ReturnStatement))
-				&& (assignment == null) && (infix == null)) {
+				&& (assignment == null) && (infixExpression == null)) {
 			fCanRemoveSynchronizedBlockOrModifier.add(statement);
 		}
 	}
@@ -1042,11 +1043,11 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if ((!isRefactorable) || (nodes.size() != 2)) {
 				return false;
 			}
-			ASTNode firstNode= nodes.get(0);
-			ASTNode secondNode= nodes.get(1);
 			if (!(nodeFitsCompareAndSet.get(0).booleanValue()) || !(nodeFitsCompareAndSet.get(1).booleanValue())) {
 				return false;
 			}
+			ASTNode firstNode= nodes.get(0);
+			ASTNode secondNode= nodes.get(1);
 			boolean oneIsAnAssignment= (firstNode instanceof Assignment) != (secondNode instanceof Assignment);
 			boolean oneIsAnInfixExpression= (firstNode instanceof InfixExpression) != (secondNode instanceof InfixExpression);
 

@@ -36,8 +36,11 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String ParseDouble;
 	public static String Integer;
 
-	public static String AtomicIntegerRefactoring_replace_if_statement_with_compare_and_set;
+	public static String BeginSingleQuote;
+	public static String EndSingleQuote;
+	public static String newLine;
 
+	public static String AtomicIntegerRefactoring_replace_if_statement_with_compare_and_set;
 	public static String AtomicIntegerRefactoring_replace_type_conversion;
 	public static String AtomicIntegerRefactoring_import;
 	public static String AtomicIntegerRefactoring_descriptor_description;
@@ -68,7 +71,6 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String AtomicInteger_byteValue;
 	public static String AtomicInteger_compareAndSet;
 	public static String AtomicInteger_todo_comment_op_cannot_be_executed_atomically;
-	public static String AtomicInteger_todo_comment_op_cannot_be_executed_atomically_nl;
 	public static String AtomicInteger_todo_comment_statements_not_properly_synchronized;
 	public static String AtomicInteger_todo_comment_statements_not_properly_synchronized_block;
 	public static String AtomicInteger_todo_comment_statements_not_properly_synchronized_method;
@@ -76,19 +78,13 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String AtomicInteger_warning_cannot_remove_synch_mod_return_assignment;
 	public static String AtomicInteger_warning_cannot_remove_synch_block_return_assignment;
 	public static String AtomicInteger_statement;
+	public static String AtomicInteger_cannot_remove_synch_block_from_the_method;
+	public static String AtomicInteger_because_there_are_multiple_statements_in_the_block_body;
+	public static String AtomicInteger_because_there_are_multiple_statements_in_the_method_body;
+	public static String AtomicInteger_because_the_statement;
+	public static String AtomicInteger_cannot_remove_synch_modifier_from_the_method;
 	public static String AtomicInteger_warning_cannot_execute_statement_atomically;
-	public static String AtomicInteger_warning_cannot_be_refactored_atomically;
-	public static String AtomicInteger_unsafe_operator_warning1;
-	public static String AtomicInteger_unsafe_operator_warning2;
-	public static String AtomicInteger_unsafe_operator_warning3;
-	public static String AtomicInteger_unsafe_operator_warning4;
-	public static String AtomicInteger_unsafe_operator_warning5;
-	public static String AtomicInteger_warning_side_effects1;
-	public static String AtomicInteger_warning_side_effects2;
-	public static String AtomicInteger_warning_side_effects3;
-	public static String AtomicInteger_warning_side_effects4;
-	public static String AtomicInteger_warning_two_field_accesses;
-	public static String AtomicInteger_warning_two_field_accesses2;
+	public static String AtomicInteger_cannot_be_refactored_into_an_atomic_operation;
 	public static String AtomicInteger_error_side_effects_on_int_field_in_assignment;
 	public static String AtomicInteger_error_side_effects_on_int_field_in_assignment2;
 

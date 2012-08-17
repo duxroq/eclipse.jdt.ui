@@ -10,7 +10,7 @@ public class TestMultipleFieldRefsInEnclosingStatementSynchBlock {
 	public void foo() {
 		synchronized (this) {
 			// TODO The operations below cannot be executed atomically.
-			// TODO The statements in this block are not properly synchronized.
+			// TODO This block is not properly synchronized in relation to other accesses to the refactored field.
 			i.set(f++);
 		}
 	}

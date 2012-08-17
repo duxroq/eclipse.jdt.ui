@@ -101,7 +101,6 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 						? null : new ConvertToAtomicIntegerRefactoring(field));
 		RefactoringStatus status= refactoring.checkAllConditions(new NullProgressMonitor());
 		assertTrue(status.hasError());
-		assertEquals(1, status.getEntries().length);
 	}
 
 	private void initializePreferences() {
@@ -154,37 +153,58 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 	// Basic Object Test
 	//=====================================================================================
 
-	public void testDemo() throws Exception {
-		objectTest("counter");
-	}
-
-	public void testInfixExpressions() throws Exception {
+	public void testMultiplication_extendedOperands() throws Exception {
 		objectTest("i");
 	}
 
-	public void testInfixExpressions2() throws Exception {
+	public void testInfixExpressionWithMixedOperands() throws Exception {
 		objectTest("i");
 	}
 
-	public void testInfixExpressions3() throws Exception {
+	public void testMultiplication_extendedOperandsWithFieldRefs() throws Exception {
 		objectTest("i");
 	}
 
-	public void testInfixExpressions4() throws Exception {
+	public void testAddition_AllFieldRefs() throws Exception {
 		objectTest("i");
 	}
 
-	public void testInfixExpressions5() throws Exception {
+	public void testAddition_NestedFieldRefs() throws Exception {
 		objectTest("i");
 	}
 
-	public void testMultipleFieldRefsInEnclosingStatementSynchBlock() throws Exception {
+	public void testAddition_FieldRefsInExtOperands() throws Exception {
 		objectTest("i");
 	}
 
-	public void testMultipleFieldRefsInEnclosingStatementSynchMethod() throws Exception {
+	public void testAddition_NoFieldRefs() throws Exception {
 		objectTest("i");
 	}
+
+	public void testCompoundSubtractionAssignment_normal() throws Exception {
+		objectTest("i");
+	}
+
+	public void testCompoundSubtractionAssignment_extendedInfixWithExtraFieldRefs() throws Exception {
+		objectTest("i");
+	}
+
+	public void testCompoundAdditionAssignment_normal() throws Exception {
+		objectTest("f");
+	}
+
+	public void testCompoundAdditionAssignment_infixExpression() throws Exception {
+		objectTest("f");
+	}
+
+	public void testCompoundAdditionAssignment_extendedInfixWithMultipleFieldRefs() throws Exception {
+		objectTest("f");
+	}
+
+	public void testCompoundAdditionAssignment_parenthesizedExpression() throws Exception {
+		objectTest("f");
+	}
+
 
 	public void testMultipleInfixExpressionsWithReferenceToChosenField() throws Exception {
 		objectTest("f");
@@ -194,15 +214,7 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("i");
 	}
 
-	public void testReadAccess() throws Exception {
-		objectTest("field");
-	}
-
 	public void testSynchronizedBlockOneSingleAccess() throws Exception {
-		objectTest("f");
-	}
-
-	public void testSynchronizedBlockMultipleAccess() throws Exception {
 		objectTest("f");
 	}
 
@@ -226,27 +238,11 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("f");
 	}
 
-	public void testMultipleInfixExpressionsAssignmentInSynchBlock() throws Exception {
-		objectTest("f");
-	}
-
-	public void testMultipleInfixExpressionsAssignmentInSynchMethod() throws Exception {
-		objectTest("f");
-	}
-
 	public void testRemoveSynchronizedBlockIncrement() throws Exception {
 		objectTest("f");
 	}
 
-	public void testNotRemoveSynchronizedBlockMultipleAccess() throws Exception {
-		objectTest("f");
-	}
-
 	public void testSynchronizedMethodSingleAccess() throws Exception {
-		objectTest("f");
-	}
-
-	public void testSynchronizedMethodMultipleAccess() throws Exception {
 		objectTest("f");
 	}
 
@@ -262,12 +258,24 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("f");
 	}
 
-	public void testAddAssign() throws Exception {
+	public void testSubtraction() throws Exception {
 		objectTest("f");
 	}
 
-	public void testSubtract() throws Exception {
-		objectTest("f");
+	public void testSubtraction_leftOperandFieldRefWithExtendedOperands() throws Exception {
+		objectTest("i");
+	}
+
+	public void testSubtraction_rightOperandFieldRef() throws Exception {
+		objectTest("i");
+	}
+
+	public void testSubtraction_rightOperandFieldRefWithExtendedOperands() throws Exception {
+		objectTest("i");
+	}
+
+	public void testSubtraction_fieldRefInExtendedOperands() throws Exception {
+		objectTest("i");
 	}
 
 	public void testFieldAndOvershadowingVariable() throws Exception {
@@ -290,7 +298,15 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("f");
 	}
 
-	public void testCounterExample() throws Exception {
+	public void testGetter() throws Exception {
+		objectTest("value");
+	}
+
+	public void testSetter() throws Exception {
+		objectTest("value");
+	}
+
+	public void testReturnPostfixIncrement() throws Exception {
 		objectTest("value");
 	}
 
@@ -310,21 +326,177 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		objectTest("i");
 	}
 
-	public void testAddingInReverse() throws Exception {
+	public void testReturnAssignment_extendedInfixWithFieldRefs() throws Exception {
+		objectTest("i");
+	}
+
+	public void testReturnAssignment_compoundAdditionOperator() throws Exception {
+		objectTest("i");
+	}
+
+	public void testReturnAssignment_compoundTimesOperator() throws Exception {
+		objectTest("i");
+	}
+
+	public void testAddition() throws Exception {
+		objectTest("i");
+	}
+
+	public void testForLoop() throws Exception {
+		objectTest("i");
+	}
+
+	public void testReplaceIfStatementWithCompareAndSet() throws Exception {
+		objectTest("i");
+	}
+
+	public void testReplaceIfStatementWithCompareAndSet_extendedSetExpression() throws Exception {
+		objectTest("i");
+	}
+
+	public void testRemoveSynchronizedBlockAddAndGetAssignment() throws Exception {
+		objectTest("counter");
+	}
+
+	public void testReplaceIfStatementWithCompareAndSet_extendedCompareExpression() throws Exception {
+		objectTest("i");
+	}
+
+	public void testAssignmentInForLoop() throws Exception {
+		objectTest("i");
+	}
+
+	public void testConvertIntToDouble() throws Exception {
+		objectTest("i");
+	}
+
+	public void testPrimitiveTypeCastConversions_double() throws Exception {
+		objectTest("i");
+	}
+
+	public void testPrimitiveTypeCastConversions_float() throws Exception {
+		objectTest("i");
+	}
+
+	public void testPrimitiveTypeCastConversions_long() throws Exception {
+		objectTest("i");
+	}
+
+	public void testPrimitiveTypeCastConversions_short() throws Exception {
+		objectTest("i");
+	}
+
+	public void testPrimitiveTypeCastConversions_byte() throws Exception {
+		objectTest("i");
+	}
+
+	public void testRemoveSynchronizedBlockPrimitiveTypeCastConversion() throws Exception {
+		objectTest("i");
+	}
+
+	public void testRemoveSynchronizedBlockIntToDoubleConversion() throws Exception {
+		objectTest("i");
+	}
+
+	public void testRemoveSynchronizedModifierPrimitiveTypeCastConversions() throws Exception {
+		objectTest("i");
+	}
+
+	public void testRemoveSynchronizedModifierIntToDoubleConversion() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinSwitchCases() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinDoStatement() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinDoStatement_NoBlockBody() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinWhileStatement() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinWhileStatement_NoBlockBody() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinEnhancedForStatement() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinEnhancedForStatement_NoBlockBody() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinForStatement() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinIfStatement() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinIfStatement_NoBlockBody() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinIfStatement_elseStatement() throws Exception {
+		objectTest("i");
+	}
+
+	public void testTodoCommentingWithinIfStatement_elseStatementNoBlockBody() throws Exception {
+		objectTest("i");
+	}
+
+	public void testRemoveSynchronizedBlockForCompareAndSet() throws Exception {
 		objectTest("i");
 	}
 
 	//------------------------- Cases below should throw a warning
 
+	public void testSynchronizedMethodMultipleAccess() throws Exception {
+		testWithWarning("f");
+	}
+
+	public void testMultipleInfixExpressionsAssignmentInSynchBlock() throws Exception {
+		testWithWarning("f");
+	}
+
+	public void testMultipleInfixExpressionsAssignmentInSynchMethod() throws Exception {
+		testWithWarning("f");
+	}
+
+	public void testMultipleFieldRefsInEnclosingStatementSynchBlock() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testMultipleFieldRefsInEnclosingStatementSynchMethod() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockCompareAndSetExtraFieldRefs() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedModifierSetAndGetAssignment() throws Exception {
+		testWithWarning("counter");
+	}
+
 	public void testWarningDueToMultiplication() throws Exception {
 		testWithWarning("f");
 	}
 
-	public void testWarningDueToMultiplicationAssignment() throws Exception {
+	public void testWarningDueToCompoundMultiplicationAssignment() throws Exception {
 		testWithWarning("f");
 	}
 
-	public void testWarningDueToDivisionAssignment() throws Exception {
+	public void testWarningDueToCompoundDivisionAssignment() throws Exception {
 		testWithWarning("f");
 	}
 
@@ -344,17 +516,73 @@ public class ConvertToAtomicIntegerTests extends AbstractSelectionTestCase {
 		testWithWarning("f");
 	}
 
-	public void testReturnAssignmentInSynchronizedMethod() throws Exception {
+	public void testNotRemoveSynchronizedModifierReturnAssignment() throws Exception {
 		testWithWarning("i");
 	}
 
-	public void testReturnAssignmentInSynchronizedBlock() throws Exception {
+	public void testNotRemoveSynchronizedBlockReturnAssignment() throws Exception {
 		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockForAnIfStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockForForStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockForWhileStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockForConditionalStatements() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockEnhancedForStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockDoStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockAssertStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockSwitchStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockTryStatement() throws Exception {
+		testWithWarning("i");
+	}
+
+	public void testNotRemoveSynchronizedBlockMultipleAccess() throws Exception {
+		testWithWarning("f");
+	}
+
+	public void testNotRemoveSynchronizedModifierAddAndGetAssignment_MultipleFieldRefs() throws Exception {
+		testWithWarning("counter");
+	}
+
+	public void testSynchronizedBlockMultipleAccess() throws Exception {
+		testWithWarning("f");
 	}
 
 	//------------------------- Cases below do not meet preconditions - should throw an error
 
-	public void testSideEffectsOnIntFieldInAssignment() throws Exception {
+	public void testPrefixSideEffectsOnIntFieldInAssignment() throws Exception {
+		invalidTest("i");
+	}
+
+	public void testPostfixSideEffectsOnIntFieldInAssignment() throws Exception {
+		invalidTest("i");
+	}
+
+	public void testAssignmentSideEffectsWithinAssignment() throws Exception {
 		invalidTest("i");
 	}
 }

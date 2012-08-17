@@ -7,7 +7,7 @@ public class TestWarningDueToTwoFieldsInSynchronizedMethod {
 	AtomicInteger f = new AtomicInteger();
 	int g;
 
-	// TODO The statements in the method below are not properly synchronized.
+	// TODO The method below is not properly synchronized in relation to other accesses to the refactored field.
 
 	synchronized void twoFieldsInSyncMethod() {
 		f.addAndGet(12);

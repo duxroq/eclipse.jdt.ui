@@ -8,7 +8,7 @@ public class TestMultipleInfixExpressionsAssignmentInSynchMethod {
 	int a;
 	int b;
 	
-	// TODO The statements in the method below are not properly synchronized.
+	// TODO The method below is not properly synchronized in relation to other accesses to the refactored field.
 
 	public synchronized void foo() {
 		// TODO The operations below cannot be executed atomically.

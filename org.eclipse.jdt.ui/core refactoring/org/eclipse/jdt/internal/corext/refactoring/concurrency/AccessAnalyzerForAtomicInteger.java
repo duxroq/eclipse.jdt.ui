@@ -821,7 +821,8 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 		}
 	}
 
-	private boolean removedSynchBlockOrModifier(IfStatement ifStatement, ExpressionStatement compareAndSetStatement, MethodDeclaration methodDecl, SynchronizedStatement syncStatement) {
+	private boolean removedSynchBlockOrModifier(IfStatement ifStatement, ExpressionStatement compareAndSetStatement,
+			MethodDeclaration methodDecl, SynchronizedStatement syncStatement) {
 
 		CompareAndSetProperties properties= fIfStatements.get(ifStatement);
 		boolean removedSynchBlock= false;
@@ -830,12 +831,12 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 			if ((properties.argsAreAtomicAccesses()) && (body.statements().size() == 1)) {
 				fRewriter.replace(syncStatement, compareAndSetStatement, createGroupDescription(REMOVE_SYNCHRONIZED_BLOCK));
 				removedSynchBlock= true;
-			} else if (!(properties.argsAreAtomicAccesses()) && (body.statements().size() == 1)) {
+			} else if (!(properties.argsAreAtomicAccesses())) {
+				insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
+						ifStatement, body, Block.STATEMENTS_PROPERTY);
 				insertStatementsInBlockAreNotSynchronizedComment(body);
-				createCannotRemoveSynchBlockWarningUnAtomicStatement(ifStatement, (Statement) body.statements().get(0));
 			} else {
 				insertStatementsInBlockAreNotSynchronizedComment(body);
-				createCannotRemoveSynchBlockWarningMultipleStatements(ifStatement);
 			}
 		} else if (methodDecl != null) {
 			int modifiers= methodDecl.getModifiers();
@@ -844,8 +845,15 @@ public class AccessAnalyzerForAtomicInteger extends ASTVisitor {
 				if ((properties.argsAreAtomicAccesses()) && (methodBodyStatements.size() == 1)) {
 					removeSynchronizedModifier(methodDecl);
 				} else if (!(properties.argsAreAtomicAccesses()) && (methodBodyStatements.size() == 1)) {
+					insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
+							ifStatement, methodDecl.getBody(), Block.STATEMENTS_PROPERTY);
 					insertStatementsInMethodAreNotSynchronizedComment(ifStatement, methodDecl);
 					createCannotRemoveSynchMethodWarningUnAtomicStatement(methodDecl, methodBodyStatements.get(0));
+				} else if (!(properties.argsAreAtomicAccesses()) && !(methodBodyStatements.size() == 1)) {
+					insertLineCommentBeforeNode(ConcurrencyRefactorings.AtomicInteger_todo_comment_op_cannot_be_executed_atomically,
+							ifStatement, methodDecl.getBody(), Block.STATEMENTS_PROPERTY);
+					insertStatementsInMethodAreNotSynchronizedComment(ifStatement, methodDecl);
+					createCannotRemoveSynchMethodWarningMultipleStatements(methodDecl);
 				} else {
 					insertStatementsInMethodAreNotSynchronizedComment(ifStatement, methodDecl);
 					createCannotRemoveSynchMethodWarningMultipleStatements(methodDecl);

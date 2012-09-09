@@ -2,7 +2,7 @@ package object_out;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TestReplaceIfStatementWithCompareAndSet_extendedSetExpression {
+public class TestReplacehIfStatementWithCompareAndSet_extendedSetExpression {
 
 	private AtomicInteger i = new AtomicInteger();
 	private int j;

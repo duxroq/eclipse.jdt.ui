@@ -71,6 +71,7 @@ public final class ConcurrencyRefactorings extends NLS {
 	public static String AtomicInteger_byteValue;
 	public static String AtomicInteger_compareAndSet;
 	public static String AtomicInteger_todo_comment_op_cannot_be_executed_atomically;
+	public static String AtomicInteger_todo_comment_op_cannot_be_executed_atomically_nl;
 	public static String AtomicInteger_todo_comment_statements_not_properly_synchronized;
 	public static String AtomicInteger_todo_comment_statements_not_properly_synchronized_block;
 	public static String AtomicInteger_todo_comment_statements_not_properly_synchronized_method;

@@ -91,6 +91,9 @@ public class AllRefactoringTests {
 		//--helpers
 		suite.addTest(RenamingNameSuggestorTests.suite());
 		suite.addTest(DelegateCreatorTests.suite());
+		
+		//--concurrency
+		suite.addTest(ConvertToAtomicIntegerTests.suite());
 		return suite;
 	}
 }

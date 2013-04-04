@@ -998,6 +998,9 @@ public final class RefactoringMessages extends NLS {
 
 	public static String SelfEncapsulateFieldInputPage_useexistinggetter_label;
 
+	public static String ConvertToAtomicIntegerInputPage_getter_name;
+	
+	public static String ConvertToAtomicIntegerInputPage_initialize_field_declaration_label;	
 
 	static {
 		reloadMessages();

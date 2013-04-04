@@ -73,6 +73,8 @@ import org.eclipse.jdt.internal.corext.refactoring.code.IntroduceFactoryRefactor
 import org.eclipse.jdt.internal.corext.refactoring.code.IntroduceIndirectionRefactoring;
 import org.eclipse.jdt.internal.corext.refactoring.code.IntroduceParameterRefactoring;
 import org.eclipse.jdt.internal.corext.refactoring.code.ReplaceInvocationsRefactoring;
+import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConcurrencyRefactorings;
+import org.eclipse.jdt.internal.corext.refactoring.concurrency.ConvertToAtomicIntegerRefactoring;
 import org.eclipse.jdt.internal.corext.refactoring.generics.InferTypeArgumentsRefactoring;
 import org.eclipse.jdt.internal.corext.refactoring.reorg.JavaCopyProcessor;
 import org.eclipse.jdt.internal.corext.refactoring.reorg.JavaDeleteProcessor;
@@ -127,6 +129,7 @@ import org.eclipse.jdt.internal.ui.refactoring.UseSupertypeWizard;
 import org.eclipse.jdt.internal.ui.refactoring.actions.RefactoringStarter;
 import org.eclipse.jdt.internal.ui.refactoring.code.InlineMethodWizard;
 import org.eclipse.jdt.internal.ui.refactoring.code.ReplaceInvocationsWizard;
+import org.eclipse.jdt.internal.ui.refactoring.concurrency.ConvertToAtomicIntegerWizard;
 import org.eclipse.jdt.internal.ui.refactoring.reorg.CreateTargetQueries;
 import org.eclipse.jdt.internal.ui.refactoring.reorg.DeleteUserInterfaceManager;
 import org.eclipse.jdt.internal.ui.refactoring.reorg.NewNameQueries;
@@ -527,6 +530,17 @@ public final class RefactoringExecutionStarter {
 		ExtractClassRefactoring refactoring= new ExtractClassRefactoring(descriptor);
 		ExtractClassWizard wizard= new ExtractClassWizard(descriptor, refactoring);
 		new RefactoringStarter().activate(wizard, shell, RefactoringMessages.OpenRefactoringWizardAction_refactoring, RefactoringSaveHelper.SAVE_REFACTORING);
+	}
+
+	public static void startAtomicIntegerRefactoring(final IField field, final Shell shell) {
+		try {
+			if (!RefactoringAvailabilityTester.isConvertAtomicIntegerAvailable(field))
+				return;
+			final ConvertToAtomicIntegerRefactoring refactoring= new ConvertToAtomicIntegerRefactoring(field);
+			new RefactoringStarter().activate(new ConvertToAtomicIntegerWizard(refactoring, ConcurrencyRefactorings.AtomicIntegerRefactoring_name), shell, "", RefactoringSaveHelper.SAVE_REFACTORING); //$NON-NLS-1$
+		} catch (JavaModelException e) {
+			ExceptionHandler.handle(e, ActionMessages.AtomicIntegerAction_dialog_title, ActionMessages.AtomicIntegerAction_dialog_cannot_perform);
+		}
 	}
 
 }

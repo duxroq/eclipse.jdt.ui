@@ -2453,6 +2453,7 @@
             <separator name="typeGroup2"/>
             <separator name="codingGroup2"/>
             <separator name="typeGroup3"/>
+            <separator name="concurrencyGroup"/>
             <separator name="scriptGroup"/>
          </menu>
          
@@ -2640,6 +2641,13 @@
                retarget="true"
                menubarPath="org.eclipse.jdt.ui.refactoring.menu/typeGroup3"
                id="org.eclipse.jdt.ui.actions.ChangeType">
+         </action>
+		<action
+               definitionId="org.eclipse.jdt.ui.edit.text.java.atomic.integer"
+               label="%Refactoring.atomicInteger.label"
+               retarget="true"
+               menubarPath="org.eclipse.jdt.ui.refactoring.menu/concurrencyGroup"
+               id="org.eclipse.jdt.ui.actions.ConvertToAtomicInteger">
          </action>
 
 <!-- script group  -->
@@ -3890,6 +3898,12 @@
             description="%ActionDefinition.selfEncapsulateField.description"
             categoryId="org.eclipse.jdt.ui.category.refactoring"
             id="org.eclipse.jdt.ui.edit.text.java.self.encapsulate.field">
+      </command>
+      <command
+            name="%ActionDefinition.atomicInteger.name"
+            description="%ActionDefinition.atomicInteger.description"
+            categoryId="org.eclipse.jdt.ui.category.refactoring"
+            id="org.eclipse.jdt.ui.edit.text.java.atomic.integer">
       </command>
       <command
             categoryId="org.eclipse.jdt.ui.category.refactoring"
@@ -5545,6 +5559,9 @@
       <contribution
             class="org.eclipse.jdt.internal.corext.refactoring.scripting.CopyRefactoringContribution"
             id="org.eclipse.jdt.ui.copy"/>
+      <contribution
+      		class="org.eclipse.jdt.internal.corext.refactoring.scripting.AtomicIntegerRefactoringContribution"
+      		id="org.eclipse.jdt.ui.atomic.integer" />
    </extension>
    
    <extension
